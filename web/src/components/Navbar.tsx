@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { FiHome, FiInfo, FiMail, FiUser } from 'react-icons/fi';
 import { RiSurveyFill } from 'react-icons/ri';
 import { SiLimesurvey } from "react-icons/si";
+import { AiOutlineLogin } from "react-icons/ai";
 
 export default function Navbar() {
   return (
@@ -15,6 +16,8 @@ export default function Navbar() {
         <NavLink href="/profile" icon={<FiUser />} text="Pwofil aw'" />
         <NavLink href="/about" icon={<FiInfo />} text="Sa ou pou sav'" />
         <NavLink href="/contact" icon={<FiMail />} text="Késyon ? Pa ézité !" />
+        <NavLink href="/auth/login" icon={<AiOutlineLogin />} text="Konèkté" />
+        {/* <Link href="/auth/register" className="hover:text-gray-300"> Register</Link> */}
       </nav>
 
       {/* Mobile Navigation (Bottom) - Fixed */}
@@ -25,6 +28,7 @@ export default function Navbar() {
         <NavLink href="/profile" icon={<FiUser />} />
         <NavLink href="/about" icon={<FiInfo />} />
         <NavLink href="/contact" icon={<FiMail />} />
+        <NavLink href="/auth/login" icon={<AiOutlineLogin />} />
       </nav>
     </>
   );
