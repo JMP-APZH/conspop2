@@ -1,7 +1,10 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
+import { FcSurvey } from 'react-icons/fc';
 import { FiHome, FiInfo, FiMail, FiClipboard, FiUser } from 'react-icons/fi'
+import { RiSurveyFill } from 'react-icons/ri';
+import { SiLimesurvey } from "react-icons/si";
 
 const Home: NextPage = () => {
   return (
@@ -13,20 +16,22 @@ const Home: NextPage = () => {
 
       {/* Desktop Navigation (Top) */}
       <nav className="hidden md:flex justify-center items-center p-4 bg-gray-800 text-yellow-300">
-        <NavLink href="/" icon={<FiHome />} text="Home" />
-        <NavLink href="/about" icon={<FiInfo />} text="About" />
-        <NavLink href="/contact" icon={<FiMail />} text="Contact" />
-        <NavLink href="/surveys" icon={<FiClipboard />} text="Surveys" />
-        <NavLink href="/profile" icon={<FiUser />} text="Profile" />
+        <NavLink href="/" icon={<FiHome />} text="A Kay" />
+        <NavLink href="/surveys" icon={<RiSurveyFill />} text="Avi a zot'" />
+        <NavLink href="/results" icon={<SiLimesurvey />} text="Rézulta tout' moun'" />
+        <NavLink href="/profile" icon={<FiUser />} text="Pwofil aw'" />
+        <NavLink href="/about" icon={<FiInfo />} text="Sa ou pou sav" />
+        <NavLink href="/contact" icon={<FiMail />} text="Késyon ? Pa ézité !" />
       </nav>
 
       {/* Mobile Navigation (Bottom) - Fixed */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center p-3 bg-gray-800 border-t border-gray-700 text-yellow-300">
         <NavLink href="/" icon={<FiHome />} />
+        <NavLink href="/surveys" icon={<RiSurveyFill />} />
+        <NavLink href="/results" icon={<SiLimesurvey />} />
+        <NavLink href="/profile" icon={<FiUser />} />
         <NavLink href="/about" icon={<FiInfo />} />
         <NavLink href="/contact" icon={<FiMail />} />
-        <NavLink href="/surveys" icon={<FiClipboard />} />
-        <NavLink href="/profile" icon={<FiUser />} />
       </nav>
 
       {/* Main Content */}
