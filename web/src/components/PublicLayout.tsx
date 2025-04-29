@@ -1,11 +1,17 @@
 import { ReactNode } from 'react';
-// import Navbar from './Navbar';
+import Head from 'next/head'
+import Navbar from './Navbar';
+
 // import Footer from './Footer';
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-yellow-300 text-white">
-      {/* <Navbar /> */}
+        <Head>
+            <title>Consultation Populaire 972</title>
+            <meta name="description" content="Sociological survey platform" />
+      </Head>
+      <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8">
         {children}
       </main>
