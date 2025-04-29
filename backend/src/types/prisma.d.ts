@@ -16,6 +16,7 @@ declare module '@prisma/client' {
     // Include other models if needed
     export interface PrismaClient {
       user: {
+        findUnique(arg0: { where: { id: string } }): unknown
         findMany: (args?: any) => Promise<User[]>
         // Add other methods you use
       }

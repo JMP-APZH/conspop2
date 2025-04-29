@@ -5,6 +5,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Context } from "../types";
 
+// import { Container } from "typedi";
+
+import { Service } from 'typedi';
+
 // Helper function to convert Prisma User to GraphQL UserType
 function toUserType(user: PrismaUser): UserType {
   return {
@@ -20,13 +24,10 @@ function toUserType(user: PrismaUser): UserType {
   };
 }
 
+@Service()
 @Resolver()
 export class AuthResolver {
-  private readonly prisma: PrismaClient;
-
-  constructor() {
-    this.prisma = new PrismaClient();
-  }
+  constructor(private prisma: PrismaClient) {}
 
   @Mutation(() => UserResponse)
   async register(
@@ -96,3 +97,7 @@ export class AuthResolver {
     );
   }
 }
+
+// Explicitly register in container
+// Container.set(AuthResolver, new AuthResolver());
+// Container.set(AuthResolver, new AuthResolver());

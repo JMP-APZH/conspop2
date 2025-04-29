@@ -7,20 +7,27 @@ import { Container } from "typedi";
 import dotenv from "dotenv";
 import path from "path";
 import { PrismaClient } from "@prisma/client";
+import { UserQueries } from "./resolvers/user-queries";
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const prisma = new PrismaClient();
 
-// Register Prisma instance for dependency injection
+// Register instances for dependency injection
 Container.set(PrismaClient, prisma);
+// Container.set(AuthResolver, new AuthResolver());
+// Container.set(BaseQueryResolver, new BaseQueryResolver());
+
+Container.set(BaseQueryResolver, new BaseQueryResolver(Container.get(PrismaClient)));
+Container.set(AuthResolver, new AuthResolver(Container.get(PrismaClient)));
+Container.set(UserQueries, new UserQueries(Container.get(PrismaClient)));
 
 async function bootstrap() {
   try {
     // Build TypeGraphQL schema
     const schema = await buildSchema({
-      resolvers: [AuthResolver, BaseQueryResolver],
+      resolvers: [AuthResolver, BaseQueryResolver, UserQueries],
       container: Container,
       validate: true,
     });

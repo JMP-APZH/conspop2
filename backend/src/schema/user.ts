@@ -1,6 +1,8 @@
 import { Field, InputType, ObjectType } from "type-graphql";
 import { User as PrismaUser } from '@prisma/client';
 
+import { IsEmail, MinLength, MaxLength } from 'class-validator';
+
 // 1. First define UserType
 @ObjectType()
 export class UserType {
@@ -16,8 +18,11 @@ export class UserType {
   @Field()
   lastName: string;
 
-  @Field({ nullable: true })
-  nickname?: string;
+  // @Field({ nullable: true })
+  // nickname?: string;
+
+  @Field(() => String, { nullable: true })
+  nickname?: string | null; // Add null to the type
 
   @Field()
   cityOfOrigin: string;
@@ -61,9 +66,12 @@ export class UserResponse {
 @InputType()
 export class RegisterInput {
   @Field()
+  @IsEmail()
   email: string;
 
   @Field()
+  @MinLength(8)
+  @MaxLength(100)
   password: string;
 
   @Field()
