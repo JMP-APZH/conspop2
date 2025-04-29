@@ -30,8 +30,8 @@ const Home: NextPage = () => {
       </nav>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-16 md:py-24">
-        <div>
+      <main className="container mx-auto py-16 md:py-24 px-20">
+        <div className="-ml-10 mr-10">
           <h1 className="font-bold text-center bg-red-800 p-2 md:text-sm lg:text-4xl">Kontan Wè Zot'</h1>
           <h1 className="font-bold text-center bg-red-800 mb-4 pb-2 md:text-sm lg:text-4xl">Lyannaj' pou fè péyi a vansé</h1>
         </div>
@@ -40,9 +40,17 @@ const Home: NextPage = () => {
         {/* <p className="text-xl text-center text-gray-300 max-w-2xl mx-auto">
           Participate in sociological studies and view community results to understand collective priorities.
         </p> */}
-        <p className="font-bold text-center italic mx-auto bg-black p-2 md:text-sm lg:text-xl">
-          En participant à cette expérience, vous permettrez à la population Martiniquaise de disposer de ses propres données pour des prises de décision pragmatiques et au plus près des priorités des Martiniquais-es.
-        </p>
+        <div className="ml-10 -mr-10">
+          <p className="font-bold text-center italic mx-auto bg-black md:text-sm lg:text-xl">
+            En participant à cette expérience, vous permettrez à la population Martiniquaise
+          </p>
+          <p className="font-bold text-center italic mx-auto bg-black md:text-sm lg:text-xl">
+            de disposer de ses propres données pour des prises de décision
+          </p>
+          <p className="font-bold text-center italic mx-auto bg-black md:text-sm lg:text-xl">
+            pragmatiques et au plus près des priorités des Martiniquais-es.
+          </p>
+        </div>
       </main>
     </div>
   )
