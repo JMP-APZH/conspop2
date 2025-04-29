@@ -6,7 +6,7 @@ import Navbar from './Navbar';
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-yellow-300 text-white">
+    <div className="min-h-screen bg-yellow-300 text-white mx-auto">
         <Head>
             <title>Consultation Populaire 972</title>
             <meta name="description" content="Sociological survey platform" />

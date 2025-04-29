@@ -13,7 +13,7 @@ export default function Navbar() {
         <NavLink href="/surveys" icon={<RiSurveyFill />} text="Avi a zot'" />
         <NavLink href="/results" icon={<SiLimesurvey />} text="Rézulta tout' moun'" />
         <NavLink href="/profile" icon={<FiUser />} text="Pwofil aw'" />
-        <NavLink href="/about" icon={<FiInfo />} text="Sa ou pou sav" />
+        <NavLink href="/about" icon={<FiInfo />} text="Sa ou pou sav'" />
         <NavLink href="/contact" icon={<FiMail />} text="Késyon ? Pa ézité !" />
       </nav>
 
