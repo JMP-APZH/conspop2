@@ -5,14 +5,14 @@ import { FiHome, FiInfo, FiMail, FiClipboard, FiUser } from 'react-icons/fi'
 
 const Home: NextPage = () => {
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-yellow-300 text-white">
       <Head>
-        <title>Survey App</title>
+        <title>Consultation Populaire 972</title>
         <meta name="description" content="Sociological survey platform" />
       </Head>
 
       {/* Desktop Navigation (Top) */}
-      <nav className="hidden md:flex justify-center items-center p-4 bg-gray-800">
+      <nav className="hidden md:flex justify-center items-center p-4 bg-gray-800 text-yellow-300">
         <NavLink href="/" icon={<FiHome />} text="Home" />
         <NavLink href="/about" icon={<FiInfo />} text="About" />
         <NavLink href="/contact" icon={<FiMail />} text="Contact" />
@@ -21,7 +21,7 @@ const Home: NextPage = () => {
       </nav>
 
       {/* Mobile Navigation (Bottom) - Fixed */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center p-3 bg-gray-800 border-t border-gray-700">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center p-3 bg-gray-800 border-t border-gray-700 text-yellow-300">
         <NavLink href="/" icon={<FiHome />} />
         <NavLink href="/about" icon={<FiInfo />} />
         <NavLink href="/contact" icon={<FiMail />} />
@@ -31,9 +31,17 @@ const Home: NextPage = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-16 md:py-24">
-        <h1 className="text-4xl font-bold text-center mb-8">Welcome to Survey App</h1>
-        <p className="text-xl text-center text-gray-300 max-w-2xl mx-auto">
+        <div>
+          <h1 className="font-bold text-center bg-red-800 p-2 md:text-sm lg:text-4xl">Kontan Wè Zot'</h1>
+          <h1 className="font-bold text-center bg-red-800 mb-4 pb-2 md:text-sm lg:text-4xl">Lyannaj' pou fè péyi a vansé</h1>
+        </div>
+        <h1 className="font-bold text-center bg-green-800 md:text-sm lg:text-4xl">Consultation Populaire - Ed. Martinique</h1>
+        <h1 className="font-bold italic text-center mb-4 bg-green-800 p-2 md:text-sm lg:text-4xl">Bienvenu-e-s à notre expérience sociale pour la Martinique</h1>
+        {/* <p className="text-xl text-center text-gray-300 max-w-2xl mx-auto">
           Participate in sociological studies and view community results to understand collective priorities.
+        </p> */}
+        <p className="font-bold text-center italic mx-auto bg-black p-2 md:text-sm lg:text-xl">
+          En participant à cette expérience, vous permettrez à la population Martiniquaise de disposer de ses propres données pour des prises de décision pragmatiques et au plus près des priorités des Martiniquais-es.
         </p>
       </main>
     </div>
