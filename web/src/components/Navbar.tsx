@@ -18,6 +18,7 @@ export default function Navbar() {
         <NavLink href="/about" icon={<FiInfo />} text="Sa ou pou sav'" />
         <NavLink href="/contact" icon={<FiMail />} text="Késyon ? Pa ézité !" />
         <NavLink href="/auth/login" icon={<AiOutlineLogin />} text="Konèkté" />
+        <NavLink href="/auth/login2" icon={<AiOutlineLogin />} text="Konèkté2" />
         {/* <Link href="/auth/register" className="hover:text-gray-300"> Register</Link> */}
       </nav>
 
@@ -30,6 +31,7 @@ export default function Navbar() {
         <NavLink href="/about" icon={<FiInfo />} />
         <NavLink href="/contact" icon={<FiMail />} />
         <NavLink href="/auth/login" icon={<AiOutlineLogin />} />
+        <NavLink href="/auth/login2" icon={<AiOutlineLogin />} />
       </nav>
     </>
   );
@@ -39,10 +41,10 @@ export default function Navbar() {
 const NavLink = ({ href, icon, text = '' }: { href: string; icon: React.ReactNode; text?: string }) => {
   const router = useRouter();
   const isActive = router.pathname === href;
-  const activeClass = isActive ? 'bg-gray-700 text-yellow-300' : 'hover:bg-gray-700';
+  const activeClass = isActive ? 'bg-yellow-300 text-gray-800' : 'hover:bg-gray-700';
 
   return (
-    <Link href={href} className={`flex flex-col items-center mx-2 md:mx-4 p-2 rounded-lg transition-colors ${activeClass}`}>
+    <Link href={href} className={`flex flex-col items-center mx-2 md:mx-4 p-2 rounded-lg transition-colors duration-300 ${activeClass}`}>
       <span className="text-xl">{icon}</span>
       {text && <span className="mt-1 text-sm">{text}</span>}
     </Link>

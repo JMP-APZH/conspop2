@@ -54,7 +54,7 @@ export default function LoginForm() {
       </div>
       <button
         type="submit"
-        className="w-full bg-black text-white py-2 px-4 rounded hover:bg-blue-600"
+        className="w-full bg-black text-yellow-300 font-bold py-2 px-4 rounded hover:bg-blue-600"
       >
         Konèkté
       </button>
