@@ -1,13 +1,12 @@
-import { Resolver, Mutation, Arg } from "type-graphql";
+import { Resolver, Mutation, Arg, Ctx } from "type-graphql";
 import { RegisterInput, LoginInput, UserResponse, UserType } from "../schema/user";
 import { PrismaClient, User as PrismaUser } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { Context } from "../types";
 
-// import { Container } from "typedi";
-
+import { ApolloContext } from "../types"; // Import your interface
 import { Service } from 'typedi';
+import { AuthenticationError } from "apollo-server-errors";
 
 // Helper function to convert Prisma User to GraphQL UserType
 function toUserType(user: PrismaUser): UserType {
@@ -31,10 +30,12 @@ export class AuthResolver {
 
   @Mutation(() => UserResponse)
   async register(
-    @Arg("input") input: RegisterInput
+    @Arg("input") input: RegisterInput,
+    @Ctx() ctx: ApolloContext // context parameter
   ): Promise<UserResponse> {
+    // You can now access ctx.prisma (though constructor injection is preferred)
     // Validate email uniqueness
-    const exists = await this.prisma.user.findUnique({
+    const exists = await ctx.prisma.user.findUnique({
       where: { email: input.email },
     });
     if (exists) throw new Error("Email already in use");
@@ -66,9 +67,10 @@ export class AuthResolver {
 
   @Mutation(() => UserResponse)
   async login(
-    @Arg("input") input: LoginInput
+    @Arg("input") input: LoginInput,
+    @Ctx() ctx: ApolloContext // context parameter
   ): Promise<UserResponse> {
-    const user = await this.prisma.user.findUnique({
+    const user = await ctx.prisma.user.findUnique({
       where: { email: input.email },
     });
 
