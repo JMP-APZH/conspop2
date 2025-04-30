@@ -87,6 +87,44 @@ export class AuthResolver {
     };
   }
 
+  @Mutation(() => UserResponse)
+  async refreshToken(
+    @Ctx() { prisma, user }: ApolloContext
+  ): Promise<UserResponse> {
+    // Authentication check
+    if (!user) {
+      throw new AuthenticationError("Not authenticated");
+    }
+
+    // Verify user still exists
+    const currentUser = await prisma.user.findUnique({
+      where: { id: user.userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        nickname: true,
+        cityOfOrigin: true,
+        currentCity: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    if (!currentUser) {
+      throw new AuthenticationError("User no longer exists");
+    }
+
+    // Generate new token
+    const token = this.generateToken(currentUser.id);
+
+    return {
+      user: toUserType(currentUser),
+      token
+    };
+  }
+
   private generateToken(userId: string): string {
     if (!process.env.JWT_SECRET) {
       throw new Error("JWT_SECRET environment variable not set");
