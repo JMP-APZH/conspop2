@@ -36,7 +36,27 @@ async function bootstrap() {
     // Create Apollo Server
     const server = new ApolloServer({
       schema,
-      context: () => ({ prisma }),
+      context: ({ req }) => { 
+        // 1. Get the authorization header
+        const authHeader = req.headers.authorization || '';
+        const token = authHeader.replace('Bearer ', '');
+
+        // 2. Initialize context with prisma (keep your existing setup)
+        const ctx = { prisma, user: null };
+
+        // 3. Verify JWT if token exists
+        if (token) {
+          try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+            ctx.user = decoded; // Add user to context
+          } catch (error) {
+            console.warn('Invalid token:', error);
+            // Don't throw here - let resolvers handle auth as needed
+          }
+        }
+
+        return ctx;
+      },
       introspection: process.env.NODE_ENV !== "production",
       formatError: (error) => {
         console.error(error);
