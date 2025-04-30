@@ -2,7 +2,39 @@ import PublicLayout from '../../components/PublicLayout';
 import Link from 'next/link';
 import { FiArrowLeft } from 'react-icons/fi';
 
+// backend connection prep
+import { useMutation } from '@apollo/client';
+import { REGISTER_MUTATION } from '../../utils/api';
+import { useRouter } from 'next/router';
+
 export default function RegisterPage() {
+
+  const router = useRouter();
+  const [registerUser, { loading, error }] = useMutation(REGISTER_MUTATION);
+
+  const onSubmit = async (data) => {
+    try {
+      const { data: response } = await registerUser({
+        variables: {
+          input: {
+            email: data.email,
+            password: data.password,
+            firstName: '', // Add these from your form
+            lastName: '',
+            cityOfOrigin: '',
+            currentCity: ''
+          }
+        }
+      });
+
+      // Store token and redirect
+      localStorage.setItem('token', response.register.token);
+      router.push('/profile');
+    } catch (err) {
+      console.error("Registration failed:", err);
+    }
+  };
+
   return (
     <PublicLayout>
       <div className="max-w-md mx-auto py-12 px-4">
