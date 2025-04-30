@@ -1,5 +1,6 @@
 // components/Layout/Navbar.tsx
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { FiHome, FiInfo, FiMail, FiUser } from 'react-icons/fi';
 import { RiSurveyFill } from 'react-icons/ri';
 import { SiLimesurvey } from "react-icons/si";
@@ -35,9 +36,16 @@ export default function Navbar() {
 }
 
 // Reusable NavLink component
-const NavLink = ({ href, icon, text = '' }: { href: string; icon: React.ReactNode; text?: string }) => (
-  <Link href={href} className="flex flex-col items-center mx-2 md:mx-4 p-2 rounded-lg hover:bg-gray-700 transition-colors">
-    <span className="text-xl">{icon}</span>
-    {text && <span className="mt-1 text-sm">{text}</span>}
-  </Link>
-);
+const NavLink = ({ href, icon, text = '' }: { href: string; icon: React.ReactNode; text?: string }) => {
+  const router = useRouter();
+  const isActive = router.pathname === href;
+  const activeClass = isActive ? 'bg-gray-700 text-yellow-300' : 'hover:bg-gray-700';
+
+  return (
+    <Link href={href} className={`flex flex-col items-center mx-2 md:mx-4 p-2 rounded-lg transition-colors ${activeClass}`}>
+      <span className="text-xl">{icon}</span>
+      {text && <span className="mt-1 text-sm">{text}</span>}
+    </Link>
+
+  );
+}
