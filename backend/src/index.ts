@@ -8,6 +8,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { PrismaClient } from "@prisma/client";
 import { UserQueries } from "./resolvers/user-queries";
+import cors from 'cors';
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
@@ -41,6 +42,10 @@ async function bootstrap() {
         console.error(error);
         return error;
       },
+      cors: {
+        origin: 'http://localhost:3000', // frontend URL
+        credentials: true
+      }
     });
 
     // Start server
