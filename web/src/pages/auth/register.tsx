@@ -6,14 +6,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
-// Auth & GraphQL - backend connection prep
+import { getApolloClient } from '../../lib/apollo-client';
+import { useApollo } from '../../lib/apollo-client';
 import { useMutation } from '@apollo/client';
 import { REGISTER_MUTATION } from '../../utils/api';
 import { useRouter } from 'next/router';
-import { setToken } from '../../utils/auth'; // to be added
+import { setToken } from '../../utils/auth';
 
-
-// 1. Define validation schema
+// Validation schema remains the same
 const registerSchema = z.object({
   email: z.string().email("Mèl ou pa valid"),
   password: z.string().min(8, "Mod'pas' ou dwe gen minimòm 8 karaktè"),
@@ -30,12 +30,12 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 
-export default function RegisterPage() {
+export default function RegisterPage({ initialApolloState }: any) {
 
+  const apolloClient = useApollo(initialApolloState);
   const router = useRouter();
-
   const [serverError, setServerError] = useState<string | null>(null);
-  
+
   const {
     register,
     handleSubmit,
@@ -44,19 +44,20 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema)
   });
 
-  const [registerUser, { loading }] = useMutation(REGISTER_MUTATION, 
-    {
-      onCompleted: (data) => {
-        setToken(data.register.token); // Store token securely
-        router.push('/profile');
-      },
-      onError: (err) => {
-        setServerError(err.message.includes('Email')
+  const [registerUser, { loading }] = useMutation(REGISTER_MUTATION, {
+    client: apolloClient,
+    onCompleted: (data) => {
+      setToken(data.register.token);
+      router.push('/profile');
+    },
+    onError: (err) => {
+      setServerError(
+        err.message.includes('Email')
           ? "Mèl sa deja itilize" 
-          : "Erè sou sèvè a, tanpri eseye ankò");
-      }
+          : "Erè sou sèvè a, tanpri eseye ankò"
+      );
     }
-  );
+  });
 
   const onSubmit = async (formData: RegisterFormData) => {
     setServerError(null);
@@ -74,13 +75,6 @@ export default function RegisterPage() {
     });
   };
 
-  //     // Store token and redirect
-  //     localStorage.setItem('token', response.register.token);
-  //     router.push('/profile');
-  //   } catch (err) {
-  //     console.error("Registration failed:", err);
-  //   }
-  // };
 
   return (
     <PublicLayout>
@@ -174,4 +168,15 @@ export default function RegisterPage() {
       </div>
     </PublicLayout>
   );
+}
+
+
+export async function getServerSideProps() {
+  const apolloClient = getApolloClient();
+  
+  return {
+    props: {
+      initialApolloState: apolloClient.cache.extract(),
+    },
+  };
 }
