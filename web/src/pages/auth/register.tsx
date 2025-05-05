@@ -144,11 +144,23 @@ export default function RegisterPage() {
               {errors.confirmPassword && <p className="text-red-400 text-sm mt-1">{errors.confirmPassword.message}</p>}
             </div>
 
+            {/* Add other fields similarly */}
+            <div>
+              <label htmlFor="firstName" className="block text-yellow-300 mb-1">Non</label>
+              <input
+                {...register("firstName")}
+                className="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                disabled={loading}
+              />
+              {errors.firstName && <p className="text-red-400 text-sm mt-1">{errors.firstName.message}</p>}
+            </div>
+
             <button
               type="submit"
+              disabled={loading}
               className="w-full bg-yellow-300 text-gray-800 py-2 px-4 rounded font-bold hover:bg-yellow-400 transition-colors"
             >
-              Réjistré
+              {loading ? 'Ap soumèt...' : 'Réjistré'}
             </button>
           </form>
 
