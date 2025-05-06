@@ -35,6 +35,15 @@ async function bootstrap() {
 
     // Create Apollo Server
     const server = new ApolloServer({
+      cors: {
+        origin: [
+          'http://localhost:3000', // Next.js frontend
+          'https://studio.apollographql.com' // For GraphQL IDE in development
+        ],
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        methods: ['GET', 'POST', 'OPTIONS']
+      },
       schema,
       context: ({ req }) => { 
         // 1. Get the authorization header
