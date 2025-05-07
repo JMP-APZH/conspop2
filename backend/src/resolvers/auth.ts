@@ -3,8 +3,7 @@ import { RegisterInput, LoginInput, UserResponse, UserType } from "../schema/use
 import { PrismaClient, User as PrismaUser } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
-import { ApolloContext } from "../types"; // Import your interface
+import { ApolloContext } from "../types";
 import { Service } from 'typedi';
 import { AuthenticationError } from "apollo-server-errors";
 
@@ -15,7 +14,7 @@ function toUserType(user: PrismaUser): UserType {
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
-    nickname: user.nickname || undefined, // Convert null to undefined
+    nickname: user.nickname || undefined,
     cityOfOrigin: user.cityOfOrigin,
     currentCity: user.currentCity,
     createdAt: user.createdAt,
@@ -31,19 +30,15 @@ export class AuthResolver {
   @Mutation(() => UserResponse)
   async register(
     @Arg("input") input: RegisterInput,
-    @Ctx() ctx: ApolloContext // context parameter
+    @Ctx() { prisma }: ApolloContext // Destructure only what you need
   ): Promise<UserResponse> {
-    // You can now access ctx.prisma (though constructor injection is preferred)
-    // Validate email uniqueness
-    const exists = await ctx.prisma.user.findUnique({
+    const exists = await prisma.user.findUnique({
       where: { email: input.email },
     });
     if (exists) throw new Error("Email already in use");
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(input.password, 12);
 
-    // Create user
     const user = await this.prisma.user.create({
       data: {
         email: input.email,
@@ -56,11 +51,10 @@ export class AuthResolver {
       },
     });
 
-    // Generate JWT
     const token = this.generateToken(user.id);
 
     return { 
-      user: toUserType(user), // Convert to GraphQL type
+      user: toUserType(user),
       token 
     };
   }
@@ -68,21 +62,26 @@ export class AuthResolver {
   @Mutation(() => UserResponse)
   async login(
     @Arg("input") input: LoginInput,
-    @Ctx() ctx: ApolloContext // context parameter
+    @Ctx() { prisma }: ApolloContext
   ): Promise<UserResponse> {
-    const user = await ctx.prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email: input.email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        // include other fields you need
     });
 
-    if (!user) throw new Error("Invalid credentials");
+    if (!user) throw new AuthenticationError("Invalid credentials");
 
     const valid = await bcrypt.compare(input.password, user.password);
-    if (!valid) throw new Error("Invalid credentials");
+    if (!valid) throw new AuthenticationError("Invalid credentials");
 
     const token = this.generateToken(user.id);
 
     return {
-      user: toUserType(user), // Convert to GraphQL type
+      user: toUserType(user),
       token
     };
   }
@@ -91,12 +90,10 @@ export class AuthResolver {
   async refreshToken(
     @Ctx() { prisma, user }: ApolloContext
   ): Promise<UserResponse> {
-    // Authentication check
     if (!user) {
       throw new AuthenticationError("Not authenticated");
     }
 
-    // Verify user still exists
     const currentUser = await prisma.user.findUnique({
       where: { id: user.userId },
       select: {
@@ -116,12 +113,9 @@ export class AuthResolver {
       throw new AuthenticationError("User no longer exists");
     }
 
-    // Generate new token
-    const token = this.generateToken(currentUser.id);
-
     return {
       user: toUserType(currentUser),
-      token
+      token: this.generateToken(currentUser.id)
     };
   }
 
@@ -137,7 +131,3 @@ export class AuthResolver {
     );
   }
 }
-
-// Explicitly register in container
-// Container.set(AuthResolver, new AuthResolver());
-// Container.set(AuthResolver, new AuthResolver());

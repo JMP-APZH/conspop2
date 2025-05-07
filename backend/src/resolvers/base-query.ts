@@ -27,7 +27,7 @@ export class BaseQueryResolver {
   
     @Query(() => String, { description: "Check database connection" })
     async dbHealth(): Promise<string> {
-      await this.prisma.$queryRaw`SELECT 1`;
+      await this.prisma.$executeRaw`SELECT 1`;
       return "Database connection OK";
     }
   }
