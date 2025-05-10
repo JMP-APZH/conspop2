@@ -16,8 +16,8 @@ export interface ApolloContext {
   user?: JwtPayload; // Now strictly typed
 }
 
-// Optional: Type for your GraphQL response
-export interface AuthResponse {
-  user: Omit<User, 'password'>; // Exclude sensitive fields
-  token: string;
-}
+// // Optional: Type for your GraphQL response
+// export interface AuthResponse {
+//   user: Omit<User, 'password'>; // Exclude sensitive fields
+//   token: string;
+// }

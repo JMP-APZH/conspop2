@@ -65,12 +65,17 @@ export class AuthResolver {
     @Ctx() { prisma }: ApolloContext
   ): Promise<UserResponse> {
     const user = await prisma.user.findUnique({
-      where: { email: input.email },
-      select: {
-        id: true,
-        email: true,
-        password: true,
-        // include other fields you need
+      where: { email: input.email }
+      // select: {
+      //   id: true,
+      //   email: true,
+      //   password: true,
+      //   firstName: true,
+      //   lastName: true,
+      //   nickname: true,
+      //   cityOfOrigin: true,
+      //   currentCity: true
+      // }
     });
 
     if (!user) throw new AuthenticationError("Invalid credentials");
@@ -96,17 +101,17 @@ export class AuthResolver {
 
     const currentUser = await prisma.user.findUnique({
       where: { id: user.userId },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        nickname: true,
-        cityOfOrigin: true,
-        currentCity: true,
-        createdAt: true,
-        updatedAt: true
-      }
+      // select: {
+      //   id: true,
+      //   email: true,
+      //   firstName: true,
+      //   lastName: true,
+      //   nickname: true,
+      //   cityOfOrigin: true,
+      //   currentCity: true,
+      //   createdAt: true,
+      //   updatedAt: true
+      // }
     });
 
     if (!currentUser) {
