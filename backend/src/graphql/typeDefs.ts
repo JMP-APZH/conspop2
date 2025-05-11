@@ -26,6 +26,8 @@ export const typeDefs = `
 
   type Query {
     currentUser: User
+    users: [User!]!
+    user(id: ID!): User
   }
 
   type Mutation {
