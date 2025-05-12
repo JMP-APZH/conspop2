@@ -57,6 +57,10 @@ const yoga = createYoga({
 
     return { prisma, user };
   },
+  cors: {
+    origin: ['http://localhost:3000'], // Next.js dev server
+    credentials: true
+  }
 });
 
 const server = createServer(yoga);
