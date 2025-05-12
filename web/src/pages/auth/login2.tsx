@@ -45,7 +45,7 @@ export default function LoginPage() {
           <div className="mt-6 text-center space-y-2">
             <p className="text-yellow-300">
               Ou poho ni kont' ou?{' '}
-              <Link href="/auth/register" className="font-bold hover:underline">
+              <Link href="/auth/register2" className="font-bold hover:underline">
                 Réjistré kow'
               </Link>
             </p>
