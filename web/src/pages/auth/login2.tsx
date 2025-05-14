@@ -1,6 +1,6 @@
 import PublicLayout from '../../components/PublicLayout';
 import Link from 'next/link';
-import { FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -39,6 +39,7 @@ export default function LoginPage() {
 
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false); // PW Toggle state
 
   const {
     register,
@@ -101,15 +102,23 @@ export default function LoginPage() {
               {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>}
             </div>
 
-            <div>
+            <div className="relative">
               <label htmlFor="password" className="block text-yellow-300 mb-1">Mod'pas'</label>
               <input
                 {...register("password")}
-                type="password"
+                type={showPassword ? "text" : "password"}
                 id="password"
                 className="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 disabled={isSubmitting}
               />
+              <button
+                type="button"
+                className="absolute right-3 top-9 text-yellow-300 hover:text-yellow-400"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={isSubmitting}
+              >
+                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+              </button>
               {errors.password && <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>}
             </div>
 
