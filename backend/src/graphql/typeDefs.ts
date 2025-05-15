@@ -9,6 +9,12 @@ export const typeDefs = `
     createdAt: String!
   }
 
+  type AdminDashboardStats {
+  totalUsers: Int!
+  newUsersLast24h: Int!
+  newUsersLast7d: Int!
+}
+
   type AuthPayload {
     user: User!
     token: String!
@@ -28,6 +34,7 @@ export const typeDefs = `
     currentUser: User
     users: [User!]!
     user(id: ID!): User
+    adminDashboardStats: AdminDashboardStats! @auth(requires: ADMIN)
   }
 
   type Mutation {
