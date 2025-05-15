@@ -1,7 +1,7 @@
 import { gql, useQuery } from '@apollo/client';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
-import AdminLayout from '../../../components/AdminLayout';
+import AdminLayout from '../../components/AdminLayout';
 
 const DASHBOARD_STATS = gql`
   query DashboardStats {
