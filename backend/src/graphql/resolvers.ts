@@ -1,6 +1,7 @@
 import { registerUser, loginUser, verifyToken } from '../lib/auth';
 
 import prisma  from '../lib/prisma';
+import { GraphQLError } from 'graphql';
 
 export const resolvers = {
   Query: {
@@ -37,6 +38,46 @@ export const resolvers = {
           createdAt: true
         }
       });
+    },
+    // admindashboard resolvers:
+    adminDashboardStats: async (_: any, __: any, context: any) => {
+      if (!context.user || context.user.role !== 'ADMIN') {
+        throw new GraphQLError('Unauthorized access to admin dashboard', {
+          extensions: {
+            code: 'FORBIDDEN',
+            http: { status: 403 }
+          }
+        });
+      }
+      
+      try {
+        const [totalUsers, newUsersLast24h, newUsersLast7d] = await Promise.all([
+          prisma.user.count(),
+          prisma.user.count({
+            where: {
+              createdAt: {
+                gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
+              }
+            }
+          }),
+          prisma.user.count({
+            where: {
+              createdAt: {
+                gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+              }
+            }
+          })
+        ]);
+
+        return { totalUsers, newUsersLast24h, newUsersLast7d };
+      } catch (error) {
+        console.error('Admin dashboard stats error:', error);
+        throw new GraphQLError('Failed to fetch dashboard statistics', {
+          extensions: {
+            code: 'INTERNAL_SERVER_ERROR'
+          }
+        });
+      }
     }
   },
   Mutation: {
