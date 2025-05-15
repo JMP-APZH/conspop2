@@ -11,16 +11,21 @@ import { RegisterInput } from '../types/auth';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 interface AuthPayload {
-  user: {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    nickname?: string | null;
-    cityOfOrigin: string;
-    currentCity: string;
-  };
+  user: AuthUser;
   token: string;
+}
+
+// interface for the returned user data
+
+interface AuthReturnUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  nickname?: string | null;
+  cityOfOrigin: string;
+  currentCity: string;
+  role: UserRole;
 }
 
 export async function registerUser({
@@ -48,7 +53,8 @@ export async function registerUser({
       lastName,
       nickname,
       cityOfOrigin,
-      currentCity
+      currentCity,
+      role: 'USER'
     },
     select: {
       id: true,
@@ -58,6 +64,7 @@ export async function registerUser({
       nickname: true,
       cityOfOrigin: true,
       currentCity: true,
+      role: true,
       createdAt: true
     }
   });
@@ -70,24 +77,9 @@ export async function registerUser({
     { 
       userId: user.id,
       email: user.email,
+      role: user.role, // Include role in JWT
       // Add other minimal claims needed
     },
-    JWT_SECRET,
-    { expiresIn: '1d' }
-  );
-  
-  return { user, token };
-}
-
-export async function loginUser(email: string, password: string) {
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw new Error('User not found');
-
-  const isValid = await bcrypt.compare(password, user.password);
-  if (!isValid) throw new Error('Invalid password');
-
-  const token = jwt.sign(
-    { userId: user.id, email: user.email },
     JWT_SECRET,
     { expiresIn: '1d' }
   );
@@ -100,16 +92,70 @@ export async function loginUser(email: string, password: string) {
       lastName: user.lastName,
       nickname: user.nickname,
       cityOfOrigin: user.cityOfOrigin,
-      currentCity: user.currentCity
+      currentCity: user.currentCity,
+      role: user.role
+    }, 
+    token 
+  };
+}
+
+export async function loginUser(email: string, password: string) {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw new Error('User not found');
+
+  const isValid = await bcrypt.compare(password, user.password);
+  if (!isValid) throw new Error('Invalid password');
+
+  const token = jwt.sign(
+    { userId: user.id, 
+      email: user.email,
+      role: user.role // Include role in JWT
+    },
+    JWT_SECRET,
+    { expiresIn: '1d' }
+  );
+  
+  return { 
+    user: {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      nickname: user.nickname,
+      cityOfOrigin: user.cityOfOrigin,
+      currentCity: user.currentCity,
+      role: user.role
     },
     token 
   };
 }
 
-export async function verifyToken(token: string) {
+// export async function verifyToken(token: string) {
+//   try {
+//     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+//     return prisma.user.findUnique({ 
+//       where: { id: decoded.userId },
+//       select: {
+//         id: true,
+//         email: true,
+//         firstName: true,
+//         lastName: true,
+//         nickname: true,
+//         cityOfOrigin: true,
+//         currentCity: true,
+//         createdAt: true
+//       }
+//     });
+//   } catch (error) {
+//     return null;
+//   }
+// }
+
+export async function verifyToken(token: string): Promise<AuthUser | null> {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-    return prisma.user.findUnique({ 
+    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    
+    const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
       select: {
         id: true,
@@ -119,10 +165,23 @@ export async function verifyToken(token: string) {
         nickname: true,
         cityOfOrigin: true,
         currentCity: true,
+        role: true,
         createdAt: true
       }
     });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Verify the role matches between JWT and DB
+    if (user.role !== decoded.role) {
+      throw new Error('Role mismatch');
+    }
+
+    return user;
   } catch (error) {
+    console.error('Token verification failed:', error);
     return null;
   }
 }
