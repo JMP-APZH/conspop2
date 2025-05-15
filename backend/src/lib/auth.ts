@@ -153,7 +153,9 @@ export async function loginUser(email: string, password: string) {
 
 export async function verifyToken(token: string): Promise<AuthUser | null> {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    // const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string, role: string };
     
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
