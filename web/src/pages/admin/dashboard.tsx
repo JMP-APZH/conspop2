@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 
+import { UsersIcon, NewUsersIcon, CalendarIcon } from '../../components/Icons';
+
 const DASHBOARD_STATS = gql`
   query DashboardStats {
     adminDashboardStats {
