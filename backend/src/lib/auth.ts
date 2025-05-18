@@ -88,11 +88,15 @@ export async function registerUser({
   console.log('Created user:', user);
 
   const token = jwt.sign(
-    { 
+    {
       userId: user.id,
       email: user.email,
-      role: user.role, // Include role in JWT
-      // Add other minimal claims needed
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      cityOfOrigin: user.cityOfOrigin,
+      currentCity: user.currentCity,
+      createdAt: user.createdAt
     },
     JWT_SECRET,
     { expiresIn: '1d' }
