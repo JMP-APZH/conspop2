@@ -5,6 +5,8 @@ import { schema } from './graphql/schema';
 import { PrismaClient } from '../node_modules/.prisma/client'
 import { verifyToken } from './lib/auth';
 
+import { schemaWithAuth } from './graphql/schema';
+
 
 
 // Initialize Prisma Client with logging
@@ -46,7 +48,7 @@ prisma.$on('error', (e: {
 })
 
 const yoga = createYoga({
-  schema,
+  schema: schemaWithAuth,
   context: async ({ request }) => {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     let user = null;

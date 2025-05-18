@@ -1,4 +1,12 @@
 export const typeDefs = `
+
+ directive @auth(requires: Role) on FIELD_DEFINITION
+
+  enum Role {
+    USER
+    ADMIN
+  }
+
   type User {
     id: ID!
     email: String!
@@ -7,6 +15,7 @@ export const typeDefs = `
     cityOfOrigin: String!
     currentCity: String!
     createdAt: String!
+    role: Role!
   }
 
   type AdminDashboardStats {
@@ -34,7 +43,7 @@ export const typeDefs = `
     currentUser: User
     users: [User!]!
     user(id: ID!): User
-    adminDashboardStats: AdminDashboardStats! @auth(requires: ADMIN)
+    adminDashboardStats: AdminDashboardStats @auth(requires: ADMIN)
   }
 
   type Mutation {

@@ -7,26 +7,40 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { RegisterInput } from '../types/auth';
 
+// import { UserRole } from '../types/auth';
+import type { AuthUser, JwtPayload } from '../types/auth';
+import { User, Role } from '@prisma/client';
+
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 interface AuthPayload {
+  // user: {
+  //   id: string;
+  //   email: string;
+  //   firstName: string;
+  //   lastName: string;
+  //   nickname?: string | null;
+  //   cityOfOrigin: string;
+  //   currentCity: string;
+  //   role: user.role;
+  // };
   user: AuthUser;
   token: string;
 }
 
 // interface for the returned user data
 
-interface AuthReturnUser {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  nickname?: string | null;
-  cityOfOrigin: string;
-  currentCity: string;
-  role: UserRole;
-}
+// interface AuthReturnUser {
+//   id: string;
+//   email: string;
+//   firstName: string;
+//   lastName: string;
+//   nickname?: string | null;
+//   cityOfOrigin: string;
+//   currentCity: string;
+//   role: UserRole;
+// }
 
 export async function registerUser({
   email,
@@ -54,7 +68,7 @@ export async function registerUser({
       nickname,
       cityOfOrigin,
       currentCity,
-      role: 'USER'
+      role: Role.USER
     },
     select: {
       id: true,
@@ -181,7 +195,7 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
       throw new Error('Role mismatch');
     }
 
-    return user;
+    return user as AuthUser;
   } catch (error) {
     console.error('Token verification failed:', error);
     return null;

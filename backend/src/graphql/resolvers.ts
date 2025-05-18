@@ -3,6 +3,8 @@ import { registerUser, loginUser, verifyToken } from '../lib/auth';
 import prisma  from '../lib/prisma';
 import { GraphQLError } from 'graphql';
 
+// import { Resolvers } from '../generated/graphql';
+
 export const resolvers = {
   Query: {
     currentUser: async (_: any, __: any, context: any) => {
@@ -41,13 +43,17 @@ export const resolvers = {
     },
     // admindashboard resolvers:
     adminDashboardStats: async (_: any, __: any, context: any) => {
-      if (!context.user || context.user.role !== 'ADMIN') {
-        throw new GraphQLError('Unauthorized access to admin dashboard', {
-          extensions: {
-            code: 'FORBIDDEN',
-            http: { status: 403 }
-          }
-        });
+      // if (!context.user || context.user.role !== 'ADMIN') {
+      //   throw new GraphQLError('Unauthorized access to admin dashboard', {
+      //     extensions: {
+      //       code: 'FORBIDDEN',
+      //       http: { status: 403 }
+      //     }
+      //   });
+      // }
+
+      if (context.user?.role !== 'ADMIN') {
+        throw new Error('Unauthorized');
       }
       
       try {
