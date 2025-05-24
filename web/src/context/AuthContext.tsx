@@ -38,9 +38,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const verifyAuth = useCallback(async () => {
+    console.log('Starting auth verification');
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
+      console.log('Token found:', !!token);
       
       if (!token) throw new Error('No token');
       
@@ -50,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // }
 
       const userData = await verifyToken(token);
+      console.log('User data from verifyToken:', userData);
 
       // Check userData FIRST before using it
     if (!userData) throw new Error('No user data');
@@ -69,6 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         currentCity: userData.currentCity,
         createdAt: userData.createdAt,
       });
+      console.log('Auth successful, user set:', userData.role);
 
       localStorage.setItem('userRole', userData.role);
       
@@ -83,6 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     } finally {
+      console.log('Auth verification complete');
       setLoading(false);
     }
   }, [logout]);
