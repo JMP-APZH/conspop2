@@ -205,3 +205,20 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
     return null;
   }
 }
+
+export async function refreshToken(oldToken: string) {
+  try {
+    const decoded = jwt.verify(oldToken, JWT_SECRET, { ignoreExpiration: true }) as { userId: string };
+    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+    
+    if (!user) throw new Error('User not found');
+    
+    return jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+  } catch (error) {
+    throw new Error('Invalid token');
+  }
+}
