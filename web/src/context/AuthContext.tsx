@@ -41,22 +41,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        logout();
-        return;
-      }
+      
+      if (!token) throw new Error('No token');
+      
+      // if (!token) {
+      //   logout();
+      //   return;
+      // }
 
       const userData = await verifyToken(token);
-      if (!userData) {
-        logout();
-        return;
-      }
 
-      // Validate role
+      // Check userData FIRST before using it
+    if (!userData) throw new Error('No user data');
+    
+    // Then validate role
     if (userData.role !== 'USER' && userData.role !== 'ADMIN') {
-      console.error('Invalid role detected:', userData.role);
-      logout();
-      return;
+      throw new Error(`Invalid role: ${userData.role}`);
     }
 
       setUser({
@@ -69,11 +69,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         currentCity: userData.currentCity,
         createdAt: userData.createdAt,
       });
-      
+
       localStorage.setItem('userRole', userData.role);
+      
     } catch (error) {
       console.error('Auth verification failed:', error);
       logout();
+
+      // Redirect to login if we're on a protected page
+      if (typeof window !== 'undefined' && 
+        window.location.pathname.startsWith('/admin')) {
+      window.location.href = '/login2';
+    }
+    
     } finally {
       setLoading(false);
     }

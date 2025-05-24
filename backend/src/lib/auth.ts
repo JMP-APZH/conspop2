@@ -206,19 +206,47 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
   }
 }
 
-export async function refreshToken(oldToken: string) {
+export function isExpiredButValid(token: string): boolean {
   try {
-    const decoded = jwt.verify(oldToken, JWT_SECRET, { ignoreExpiration: true }) as { userId: string };
-    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
-    
-    if (!user) throw new Error('User not found');
-    
-    return jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
-      JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-  } catch (error) {
-    throw new Error('Invalid token');
+    // Verify without checking expiration
+    jwt.verify(token, JWT_SECRET, { ignoreExpiration: true });
+    return true;
+  } catch {
+    return false;
   }
+}
+
+// export async function refreshToken(oldToken: string) {
+//   try {
+//     const decoded = jwt.verify(oldToken, JWT_SECRET, { ignoreExpiration: true }) as { userId: string };
+//     const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+    
+//     if (!user) throw new Error('User not found');
+    
+//     return jwt.sign(
+//       { userId: user.id, email: user.email, role: user.role },
+//       JWT_SECRET,
+//       { expiresIn: '1d' }
+//     );
+//   } catch (error) {
+//     throw new Error('Invalid token');
+//   }
+// }
+
+export async function refreshToken(oldToken: string): Promise<string> {
+  const decoded = jwt.verify(oldToken, JWT_SECRET, { 
+    ignoreExpiration: true 
+  }) as { userId: string };
+  
+  const user = await prisma.user.findUnique({ 
+    where: { id: decoded.userId } 
+  });
+  
+  if (!user) throw new Error('User not found');
+  
+  return jwt.sign(
+    { userId: user.id, email: user.email, role: user.role },
+    JWT_SECRET,
+    { expiresIn: '1d' }
+  );
 }

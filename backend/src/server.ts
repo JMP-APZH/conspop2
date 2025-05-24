@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { schema } from './graphql/schema';
 // import { PrismaClient } from '../node_modules/@prisma/client'
 import { PrismaClient } from '../node_modules/.prisma/client'
-import { verifyToken } from './lib/auth';
+import { isExpiredButValid, refreshToken, verifyToken } from './lib/auth';
 
 import { schemaWithAuth } from './graphql/schema';
 
@@ -54,12 +54,17 @@ const yoga = createYoga({
     let user = null;
 
     if (token) {
-      user = await verifyToken(token);
-
+      try {
+        user = await verifyToken(token);
+        
         // If token expired but is otherwise valid
-      if (!user && isExpiredButValid(token)) {
-        const newToken = refreshToken(token);
-        // You'd need to communicate this back to client
+        if (!user && isExpiredButValid(token)) {
+          const newToken = await refreshToken(token);
+          user = await verifyToken(newToken);
+          // You should return the newToken to client somehow
+        }
+      } catch (error) {
+        console.error('Authentication error:', error);
       }
     }
 

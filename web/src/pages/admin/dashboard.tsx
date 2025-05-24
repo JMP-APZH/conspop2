@@ -16,21 +16,19 @@ const DASHBOARD_STATS = gql`
 `;
 
 export default function AdminDashboard() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
-  const { loading: queryLoading, error, data } = useQuery(DASHBOARD_STATS, {
+  const { error, data } = useQuery(DASHBOARD_STATS, {
     fetchPolicy: 'network-only'
   });
 
   useEffect(() => {
-    if (!authLoading && user?.role !== 'ADMIN') {
-      router.push('/');
+    if (!loading && user?.role !== 'ADMIN') {
+      router.push('/login2');
     }
-  }, [user, authLoading, router]);
+  }, [user, loading, router]);
 
-  if (authLoading || queryLoading) {
-    return <AdminLayout>Loading...</AdminLayout>;
-  }
+  if (loading || !user) return <div>Loading...</div>;
 
   if (error) {
     return <AdminLayout>Error: {error.message}</AdminLayout>;
