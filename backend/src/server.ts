@@ -55,6 +55,12 @@ const yoga = createYoga({
 
     if (token) {
       user = await verifyToken(token);
+
+        // If token expired but is otherwise valid
+      if (!user && isExpiredButValid(token)) {
+        const newToken = refreshToken(token);
+        // You'd need to communicate this back to client
+      }
     }
 
     return { prisma, user };
