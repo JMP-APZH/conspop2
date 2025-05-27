@@ -1,6 +1,7 @@
 // web/src/context/AuthContext.tsx
 import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { verifyToken, VerifiedUser } from '../lib/auth'; // Now using local version
+import jwt from 'jsonwebtoken';
 
 // interface User extends VerifiedUser {
 //   id: string;
@@ -29,75 +30,77 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<VerifiedUser | null>(null);
+  const _setUser = useCallback((userData: VerifiedUser | null) => {
+    console.log('[AuthContext] Setting user:', userData);
+    setUser(userData);
+    console.log('[AuthContext] User state after internal update:', userData); // Added line
+  }, []);
   const [loading, setLoading] = useState(true);
 
+  // Updated logout function (replace existing one)
   const logout = useCallback(() => {
+    console.log('[AuthContext] Logging out user'); // Optional debug log
     localStorage.removeItem('token');
-    localStorage.removeItem('userRole');
-    setUser(null);
-  }, []);
+    _setUser(null);
+    if (typeof window !== 'undefined') {
+      window.location.href = '/auth/login2'; // Full page reload
+    }
+  }, [_setUser]); // Keep the dependency
 
   const verifyAuth = useCallback(async () => {
-    console.log('Starting auth verification');
-    setLoading(true);
+    console.group('[AuthContext] verifyAuth');
     try {
       const token = localStorage.getItem('token');
-      console.log('Token found:', !!token);
+      console.log('Token exists:', !!token);
       
-      if (!token) throw new Error('No token');
-      
-      // if (!token) {
-      //   logout();
-      //   return;
-      // }
-
-      const userData = await verifyToken(token);
-      console.log('User data from verifyToken:', userData);
-
-      // Check userData FIRST before using it
-    if (!userData) throw new Error('No user data');
-    
-    // Then validate role
-    if (userData.role !== 'USER' && userData.role !== 'ADMIN') {
-      throw new Error(`Invalid role: ${userData.role}`);
-    }
-
-      setUser({
-        id: userData.id,
-        email: userData.email, // Ensure verifyToken returns email
-        role: userData.role,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        cityOfOrigin: userData.cityOfOrigin,
-        currentCity: userData.currentCity,
-        createdAt: userData.createdAt,
+      if (!token) {
+        console.log('No token - skipping verification');
+        return;
+      }
+  
+      const response = await fetch('/api/verify-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
       });
-      console.log('Auth successful, user set:', userData.role);
-
-      localStorage.setItem('userRole', userData.role);
+  
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+  
+      const userData = await response.json();
+      console.log('User data received:', userData);
       
+      if (!userData?.id) {
+        throw new Error('Invalid user data');
+      }
+  
+      _setUser(userData);
     } catch (error) {
-      console.error('Auth verification failed:', error);
-      logout();
-
-      // Redirect to login if we're on a protected page
-      if (typeof window !== 'undefined' && 
-        window.location.pathname.startsWith('/admin')) {
-      window.location.href = '/login2';
-    }
-    
+      console.error('Verification failed:', error);
+      localStorage.removeItem('token');
+      _setUser(null);
+      
+      if (!window.location.pathname.includes('/auth')) {
+        console.log('Redirecting to login');
+        window.location.href = '/auth/login2';
+      }
     } finally {
-      console.log('Auth verification complete');
+      console.groupEnd();
       setLoading(false);
     }
-  }, [logout]);
+  }, [_setUser]);
 
   useEffect(() => {
     verifyAuth();
   }, [verifyAuth]);
 
+  useEffect(() => {
+    console.log('[AuthContext] Current state:', { user, loading });
+  }, [user, loading]);
+
   return (
-    <AuthContext.Provider value={{ user, loading, setUser, logout }}>
+    <AuthContext.Provider value={{ user, loading, setUser: _setUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

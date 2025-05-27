@@ -2,13 +2,14 @@ import PublicLayout from '../../components/PublicLayout';
 import Link from 'next/link';
 import { FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/router';
-import { setToken } from '../../utils/auth';
+// import { setToken } from '../../utils/auth';
 import { gql, useMutation } from '@apollo/client';
+import { useAuth } from '@/context/AuthContext';
 
 // Validation schema
 const loginSchema = z.object({
@@ -29,6 +30,7 @@ const LOGIN_MUTATION = gql`
         lastName
         cityOfOrigin
         currentCity
+        role
       }
       token
     }
@@ -39,7 +41,18 @@ export default function LoginPage() {
 
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false); // PW Toggle state
+  const [showPassword, setShowPassword] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const { setUser } = useAuth();
+
+  // Moved useEffect to component level (not inside onCompleted)
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      console.log('[Login] Token exists - redirecting to dashboard');
+      router.replace('/admin/dashboard');
+    }
+  }, [router]);
 
   const {
     register,
@@ -51,20 +64,17 @@ export default function LoginPage() {
 
   const [login] = useMutation(LOGIN_MUTATION, {
     onCompleted: (data) => {
-      setToken(data.login.token);
-      router.push('/profile');
+      const { token } = data.login;
+      localStorage.setItem('token', token);
+      console.log('Login successful - redirecting');
+      window.location.href = '/admin/dashboard';
     },
     onError: (error) => {
-      setServerError(
-        error.message.includes('User not found')
-          ? "Mèl sa pa egziste"
-          : error.message.includes('Invalid password')
-          ? "Mod'pas' ou pa kòrèk"
-          : "Erè sou sèvè a, tanpri eseye ankò"
-      );
+      console.error('Login failed:', error);
+      setServerError("Authentication failed");
     }
   });
-
+  
   const onSubmit = async (formData: LoginFormData) => {
     setServerError(null);
     await login({ variables: formData });
@@ -95,6 +105,7 @@ export default function LoginPage() {
               <input
                 {...register("email")}
                 type="email"
+                autoComplete="username"
                 id="email"
                 className="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 disabled={isSubmitting}
@@ -107,6 +118,7 @@ export default function LoginPage() {
               <input
                 {...register("password")}
                 type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
                 id="password"
                 className="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 disabled={isSubmitting}
@@ -124,10 +136,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isRedirecting}
               className="w-full bg-yellow-300 text-gray-800 py-2 px-4 rounded font-bold hover:bg-yellow-400 transition-colors"
             >
-              {isSubmitting ? 'Ap konèkté...' : 'Konèkté kow\''}
+              {(isSubmitting || isRedirecting) ? 'Ap konèkté...' : 'Konèkté kow\''}
             </button>
           </form>
 

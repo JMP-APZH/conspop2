@@ -52,27 +52,31 @@ const yoga = createYoga({
   context: async ({ request }) => {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     let user = null;
+    let newToken = null;
 
     if (token) {
       try {
         user = await verifyToken(token);
         
-        // If token expired but is otherwise valid
         if (!user && isExpiredButValid(token)) {
-          const newToken = await refreshToken(token);
+          newToken = await refreshToken(token);
           user = await verifyToken(newToken);
-          // You should return the newToken to client somehow
         }
       } catch (error) {
         console.error('Authentication error:', error);
       }
     }
 
-    return { prisma, user };
+    return { 
+      prisma, 
+      user,
+      setAuthHeader: newToken ? `Bearer ${newToken}` : null
+    };
   },
   cors: {
     origin: ['http://localhost:3000'], // Next.js dev server
-    credentials: true
+    credentials: true,
+    allowedHeaders: ['Authorization', 'Content-Type']
   }
 });
 

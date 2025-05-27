@@ -7,12 +7,22 @@ export default function AuthRedirectHandler() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && router.pathname.startsWith('/admin') && user?.role !== 'ADMIN') {
+    if (loading) return;
+
+    // Skip for auth pages
+    if (router.pathname.startsWith('/auth')) return;
+
+    // Admin route protection
+    if (router.pathname.startsWith('/admin') && user?.role !== 'ADMIN') {
       router.push('/');
+      return;
+    }
+
+    // General auth protection (except public routes)
+    if (!user && !['/', '/about'].includes(router.pathname)) {
+      router.push('/auth/login2');
     }
   }, [user, loading, router.pathname]);
 
   return null;
 }
-
-// Then add this to your _app.tsx

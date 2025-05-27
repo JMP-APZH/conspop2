@@ -52,7 +52,15 @@ export const resolvers = {
       //   });
       // }
 
+      console.log('Admin dashboard request received');
+      console.log('Context user:', context.user);
+
+      // if (context.user?.role !== 'ADMIN') {
+      //   throw new Error('Unauthorized');
+      // }
+
       if (context.user?.role !== 'ADMIN') {
+        console.log('Unauthorized access attempt');
         throw new Error('Unauthorized');
       }
       
@@ -99,7 +107,13 @@ export const resolvers = {
     },
     login: async (_: any, { email, password }: { email: string; password: string }) => {
       const { user, token } = await loginUser(email, password);
-      return { user, token };
+      return { 
+        user: {
+          ...user,
+          role: user.role // Explicitly include role
+        }, 
+        token 
+      };
     }
   }
 };

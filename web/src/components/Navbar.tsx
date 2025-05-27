@@ -19,6 +19,7 @@ export default function Navbar() {
         <NavLink href="/contact" icon={<FiMail />} text="Késyon ? Pa ézité !" />
         <NavLink href="/auth/login" icon={<AiOutlineLogin />} text="Konèkté" />
         <NavLink href="/auth/login2" icon={<AiOutlineLogin />} text="Konèkté2" />
+        <NavLink href="/auth/login3" icon={<AiOutlineLogin />} text="Konèkté3" />
         {/* <Link href="/auth/register" className="hover:text-gray-300"> Register</Link> */}
       </nav>
 
@@ -32,6 +33,7 @@ export default function Navbar() {
         <NavLink href="/contact" icon={<FiMail />} />
         <NavLink href="/auth/login" icon={<AiOutlineLogin />} />
         <NavLink href="/auth/login2" icon={<AiOutlineLogin />} />
+        <NavLink href="/auth/login3" icon={<AiOutlineLogin />} />
       </nav>
     </>
   );

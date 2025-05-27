@@ -6,13 +6,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const role = localStorage.getItem('userRole');
-    
-    if (!token || role !== 'ADMIN') {
-      router.push('/auth/login');
-    }
-  }, []);
+    const verifyAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/auth/login2');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/verify-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+
+        if (!response.ok) {
+          throw new Error('Verification failed');
+        }
+
+        const userData = await response.json();
+        if (userData.role !== 'ADMIN') {  // Fixed comparison
+          throw new Error('Not an admin');
+        }
+
+      } catch (error) {
+        localStorage.removeItem('token');
+        router.push('/auth/login2');
+      }
+    };
+
+    verifyAuth();
+  }, [router]);
 
   return (
     <>

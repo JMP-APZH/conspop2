@@ -29,6 +29,11 @@ export const typeDefs = `
     token: String!
   }
 
+  type LoginResponse {
+  user: User!
+  token: String!
+}
+
   input RegisterInput {
     email: String!
     password: String!
