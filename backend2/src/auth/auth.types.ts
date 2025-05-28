@@ -1,5 +1,41 @@
-import { ObjectType, Field } from 'type-graphql';
-import { User as PrismaUser, Role } from '@prisma/client';
+import { ObjectType, Field, InputType } from 'type-graphql';
+import { Role, User as PrismaUser } from '@prisma/client';
+
+@InputType()
+export class RegisterInput {
+  @Field()
+  email!: string;
+
+  @Field()
+  password!: string;
+
+  @Field()
+  firstName!: string;
+
+  @Field()
+  lastName!: string;
+
+  @Field({ nullable: true })
+  nickname?: string;
+
+  @Field()
+  cityOfOrigin!: string;
+
+  @Field()
+  currentCity!: string;
+
+  @Field(() => Role, { nullable: true })
+  role?: Role;
+}
+
+@InputType()
+export class LoginInput {
+  @Field()
+  email!: string;
+
+  @Field()
+  password!: string;
+}
 
 @ObjectType()
 export class User {
@@ -45,4 +81,13 @@ export class User {
     this.createdAt = user.createdAt;
     this.updatedAt = user.updatedAt;
   }
+}
+
+@ObjectType()
+export class AuthPayload {
+  @Field()
+  token!: string;
+
+  @Field(() => User)
+  user!: User;
 }

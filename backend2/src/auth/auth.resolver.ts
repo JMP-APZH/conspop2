@@ -9,24 +9,30 @@ export class AuthResolver {
   async register(
     @Arg('input') input: RegisterInput
   ) {
-    const user = await AuthService.register(input);
-    const token = AuthService.generateToken(user);
-    return { token, user };
+    const prismaUser = await AuthService.register(input);
+    const token = AuthService.generateToken(prismaUser);
+    return { 
+      token, 
+      user: new User(prismaUser) // Now properly constructed
+    };
   }
 
   @Mutation(() => AuthPayload)
   async login(
     @Arg('input') input: LoginInput
   ) {
-    const user = await AuthService.login(input.email, input.password);
-    const token = AuthService.generateToken(user);
-    return { token, user };
+    const prismaUser = await AuthService.login(input.email, input.password);
+    const token = AuthService.generateToken(prismaUser);
+    return { 
+      token, 
+      user: new User(prismaUser) // Now properly constructed
+    };
   }
 
   @Query(() => User, { nullable: true })
   async me(@Ctx() ctx: Context) {
     if (!ctx.userId) return null;
-    const user = await AuthService.getUserById(ctx.userId);
-    return user ? new User(user) : null;
+    const prismaUser = await AuthService.getUserById(ctx.userId);
+    return prismaUser ? new User(prismaUser) : null;
   }
 }
