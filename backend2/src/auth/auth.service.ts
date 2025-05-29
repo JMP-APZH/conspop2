@@ -1,4 +1,4 @@
-import { PrismaClient, Role, User as PrismaUser } from '@prisma/client';
+import { PrismaClient, Role as PrismaRole, User as PrismaUser } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { RegisterInput } from './auth.types';
@@ -18,7 +18,7 @@ export const AuthService = {
         nickname: input.nickname,
         cityOfOrigin: input.cityOfOrigin,
         currentCity: input.currentCity,
-        role: input.role || Role.USER
+        role: input.role || PrismaRole.USER // Instead of just Role.USER
       }
     });
   },
@@ -33,7 +33,7 @@ export const AuthService = {
     return user;
   },
 
-  generateToken(user: { id: string; role: Role }): string {
+  generateToken(user: { id: string; role: PrismaRole }): string {
     return jwt.sign(
       { userId: user.id, role: user.role },
       JWT_SECRET,

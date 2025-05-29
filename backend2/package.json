@@ -2,8 +2,14 @@
   "name": "backend2",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -18,9 +24,12 @@
     "graphql": "^16.11.0",
     "jsonwebtoken": "^9.0.2",
     "prisma": "^6.8.2",
+    "reflect-metadata": "^0.2.2",
     "type-graphql": "^2.0.0-rc.2"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.15.21",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"

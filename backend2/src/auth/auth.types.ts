@@ -1,5 +1,11 @@
-import { ObjectType, Field, InputType } from 'type-graphql';
-import { Role, User as PrismaUser } from '@prisma/client';
+import { ObjectType, Field, InputType, registerEnumType } from 'type-graphql';
+import { Role as PrismaRole, User as PrismaUser } from '@prisma/client';
+
+// Register the Prisma enum with TypeGraphQL
+registerEnumType(PrismaRole, {
+  name: 'Role', // This name must match your GraphQL schema
+  description: 'User roles',
+});
 
 @InputType()
 export class RegisterInput {
@@ -24,8 +30,8 @@ export class RegisterInput {
   @Field()
   currentCity!: string;
 
-  @Field(() => Role, { nullable: true })
-  role?: Role;
+  @Field(() => PrismaRole) // Explicitly specify the enum type
+  role!: PrismaRole;
 }
 
 @InputType()
@@ -60,8 +66,8 @@ export class User {
   @Field()
   currentCity: string;
 
-  @Field(() => Role)
-  role: Role;
+  @Field(() => PrismaRole) // Explicitly specify the enum type
+  role!: PrismaRole;
 
   @Field()
   createdAt: Date;
