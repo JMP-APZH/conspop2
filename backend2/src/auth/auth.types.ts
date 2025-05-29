@@ -30,8 +30,8 @@ export class RegisterInput {
   @Field()
   currentCity!: string;
 
-  @Field(() => PrismaRole) // Explicitly specify the enum type
-  role!: PrismaRole;
+  @Field(() => PrismaRole, { nullable: true }) // Explicitly specify the enum type; Make role optional
+  role?: PrismaRole;
 }
 
 @InputType()

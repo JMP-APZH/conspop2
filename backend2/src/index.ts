@@ -7,6 +7,8 @@ import { createContext } from './context';
 import { StandaloneServerContextFunctionArgument } from '@apollo/server/standalone';
 import { Request } from 'express';
 
+import 'dotenv/config';
+
 async function bootstrap() {
   const schema = await buildSchema({
     resolvers: [AuthResolver],
