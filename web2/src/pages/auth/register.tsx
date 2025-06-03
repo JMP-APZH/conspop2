@@ -24,11 +24,22 @@ const REGISTER_MUTATION = gql`
   }
 `;
 
+interface RegisterFormData {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  firstName: string;
+  lastName: string;
+  cityOfOrigin: string;
+  currentCity: string;
+}
+
+
 const schema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Email is required'),
   password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
   confirmPassword: yup.string()
-    .oneOf([yup.ref('password'), null], 'Passwords must match')
+    .oneOf([yup.ref('password'), undefined], 'Passwords must match')
     .required('Confirm Password is required'),
   firstName: yup.string().required('First name is required'),
   lastName: yup.string().required('Last name is required'),
@@ -43,7 +54,7 @@ export default function RegisterPage() {
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: RegisterFormData) => {
     try {
       const { data: response } = await registerUser({
         variables: {

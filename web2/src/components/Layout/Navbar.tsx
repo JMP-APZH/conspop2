@@ -8,6 +8,7 @@ import { isAuthenticated } from '../../lib/auth';
 import { useApolloClient } from '@apollo/client';
 import { removeAuthToken } from '../../lib/auth';
 import { ReactNode } from 'react';
+import './globals.css'
 
 interface NavLinkProps {
   href: string;

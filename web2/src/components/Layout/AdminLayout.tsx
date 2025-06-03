@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Navbar from './Navbar';
-import { isAuthenticated } from '../../../lib/auth';
+import { isAuthenticated } from '../../lib/auth';
 import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
 
@@ -13,7 +13,11 @@ const ME_QUERY = gql`
   }
 `;
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+interface AdminLayoutProps {
+  children: ReactNode;
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const { data, loading, error } = useQuery(ME_QUERY);
 

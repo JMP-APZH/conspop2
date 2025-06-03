@@ -1,9 +1,14 @@
-import { useEffect } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Navbar from './Navbar';
-import { isAuthenticated } from '../../../lib/auth';
+import { isAuthenticated } from '../../lib/auth';
+import './globals.css'
 
-export default function PrivateLayout({ children }: { children: React.ReactNode }) {
+interface PrivateLayoutProps {
+  children: ReactNode;
+}
+
+export default function PrivateLayout({ children }: PrivateLayoutProps) {
   const router = useRouter();
 
   useEffect(() => {
