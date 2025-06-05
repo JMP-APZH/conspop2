@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { FiHome, FiInfo, FiMail, FiUser } from 'react-icons/fi';
+import { FiSettings } from 'react-icons/fi';
 import { RiSurveyFill } from 'react-icons/ri';
 import { SiLimesurvey } from "react-icons/si";
 import { AiOutlineLogin, AiOutlineLogout } from "react-icons/ai";
-import { isAuthenticated } from '../../lib/auth';
+import { getAuthUserRole, isAuthenticated } from '../../lib/auth';
 import { useApolloClient } from '@apollo/client';
 import { removeAuthToken } from '../../lib/auth';
 import { ReactNode } from 'react';
@@ -36,6 +37,7 @@ export default function Navbar() {
   const router = useRouter();
   const client = useApolloClient();
   const authenticated = isAuthenticated();
+  const userRole = authenticated ? getAuthUserRole() : null; // You'll need to implement getAuthUserRole()
 
   const handleLogout = () => {
     removeAuthToken();
@@ -51,6 +53,10 @@ export default function Navbar() {
         <NavLink href="/surveys" icon={<RiSurveyFill />} text="Avi a zot'" />
         <NavLink href="/results" icon={<SiLimesurvey />} text="Rézulta tout' moun'" />
         {authenticated && <NavLink href="/profile" icon={<FiUser />} text="Pwofil aw'" />}
+        {/* Add Admin Dashboard link */}
+        {authenticated && userRole === 'ADMIN' && (
+          <NavLink href="/admin/dashboard" icon={<FiSettings />} text="Admin" />
+        )}
         <NavLink href="/about" icon={<FiInfo />} text="Sa ou pou sav'" />
         <NavLink href="/contact" icon={<FiMail />} text="Késyon ? Pa ézité !" />
         {authenticated ? (
@@ -72,6 +78,10 @@ export default function Navbar() {
         <NavLink href="/surveys" icon={<RiSurveyFill />} />
         <NavLink href="/results" icon={<SiLimesurvey />} />
         {authenticated && <NavLink href="/profile" icon={<FiUser />} />}
+        {/* Add Admin Dashboard link for mobile */}
+        {authenticated && userRole === 'ADMIN' && (
+          <NavLink href="/admin/dashboard" icon={<FiSettings />} />
+        )}
         <NavLink href="/about" icon={<FiInfo />} />
         <NavLink href="/contact" icon={<FiMail />} />
         {authenticated ? (

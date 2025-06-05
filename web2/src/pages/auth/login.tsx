@@ -25,6 +25,11 @@ const LOGIN_MUTATION = gql`
   }
 `;
 
+interface LoginFormData {
+  email: string;
+  password: string;
+}
+
 const schema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Email is required'),
   password: yup.string().required('Password is required'),
@@ -38,7 +43,7 @@ export default function LoginPage() {
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: LoginFormData) => {
     try {
       const { data: response } = await loginUser({
         variables: {
@@ -51,7 +56,12 @@ export default function LoginPage() {
 
       if (response?.login?.token) {
         setAuthToken(response.login.token);
-        router.push('/profile');
+        // Redirect based on role
+        if (response.login.user.role === 'ADMIN') {
+          router.push('/admin/dashboard');
+        } else {
+          router.push('/profile');
+        }
       }
     } catch (err) {
       console.error('Login error:', err);

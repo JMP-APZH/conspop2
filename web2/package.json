@@ -11,6 +11,7 @@
   "dependencies": {
     "@apollo/client": "^3.13.8",
     "@hookform/resolvers": "^5.0.1",
+    "@prisma/client": "^6.9.0",
     "formik": "^2.4.6",
     "graphql": "^16.11.0",
     "next": "15.3.3",
