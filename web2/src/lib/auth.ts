@@ -1,4 +1,5 @@
-import { Role as PrismaRole } from '@prisma/client';
+// import { Role as PrismaRole } from '@prisma/client';
+import { Role } from '../types/roles';
 import jwt from 'jsonwebtoken';
 
 export const setAuthToken = (token: string) => {
@@ -24,12 +25,12 @@ export const setAuthToken = (token: string) => {
     return !!getAuthToken();
   };
 
-  export const getAuthUserRole = (): PrismaRole | null => {
+  export const getAuthUserRole = (): Role | null => {
     const token = getAuthToken();
     if (!token) return null;
     
     try {
-      const decoded = jwt.decode(token) as { role?: PrismaRole };
+      const decoded = jwt.decode(token) as { role?: Role };
       return decoded?.role || null;
     } catch {
       return null;
