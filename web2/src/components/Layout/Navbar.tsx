@@ -8,7 +8,7 @@ import { AiOutlineLogin, AiOutlineLogout } from "react-icons/ai";
 import { getAuthUserRole, isAuthenticated } from '../../lib/auth';
 import { useApolloClient } from '@apollo/client';
 import { removeAuthToken } from '../../lib/auth';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import './globals.css'
 
 interface NavLinkProps {
@@ -37,7 +37,10 @@ export default function Navbar() {
   const router = useRouter();
   const client = useApolloClient();
   const authenticated = isAuthenticated();
-  const userRole = authenticated ? getAuthUserRole() : null; // You'll need to implement getAuthUserRole()
+  // const userRole = authenticated ? getAuthUserRole() : null; // You'll need to implement getAuthUserRole()
+
+  const [mounted, setMounted] = useState(false);
+  const [userRole, setUserRole] = useState<Role | null>(null);
 
   const handleLogout = () => {
     removeAuthToken();
@@ -45,6 +48,19 @@ export default function Navbar() {
     router.push('/auth/login');
   };
 
+  // Don't render auth-dependent content during SSR
+  if (!mounted) {
+    return (
+      <nav className="hidden md:flex justify-center items-center p-4 bg-gray-800 text-yellow-300">
+        {/* Basic non-auth dependent links */}
+        <NavLink href="/" icon={<FiHome />} text="A Kay" />
+        <NavLink href="/about" icon={<FiInfo />} text="Sa ou pou sav'" />
+        <NavLink href="/contact" icon={<FiMail />} text="Késyon ? Pa ézité !" />
+      </nav>
+    );
+  }
+
+  // Full render after hydration
   return (
     <>
       {/* Desktop Navigation (Top) */}

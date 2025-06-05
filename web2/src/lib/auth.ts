@@ -2,6 +2,9 @@
 import { Role } from '../types/roles';
 import jwt from 'jsonwebtoken';
 
+// Helper to check if running on client
+const isClient = () => typeof window !== 'undefined';
+
 export const setAuthToken = (token: string) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('token', token);
@@ -22,10 +25,16 @@ export const setAuthToken = (token: string) => {
   };
   
   export const isAuthenticated = (): boolean => {
+    // Always return false during SSR
+    if (!isClient()) return false;
     return !!getAuthToken();
   };
 
   export const getAuthUserRole = (): Role | null => {
+
+    // Always return null during SSR
+    if (!isClient()) return null;
+
     const token = getAuthToken();
     if (!token) return null;
     
