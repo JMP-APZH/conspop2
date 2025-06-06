@@ -2,6 +2,7 @@ import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 import AdminLayout from '../../components/Layout/AdminLayout';
 import AdminRoute from '@/components/Auth/AdminRoute';
+import { useEffect } from 'react';
 
 const GET_USERS = gql`
   query GetUsers {
@@ -26,8 +27,24 @@ const UPDATE_USER_ROLE = gql`
 `;
 
 export default function AdminUsersPage() {
-  const { loading, error, data, refetch } = useQuery(GET_USERS);
-  const [updateRole] = useMutation(UPDATE_USER_ROLE);
+  const { loading, error, data, refetch } = useQuery(GET_USERS, {
+    fetchPolicy: 'network-only', // Always fetch fresh data
+    onError: (err) => {
+      console.error('GraphQL Error Details:', {
+        message: err.message,
+        networkError: err.networkError,
+        graphQLErrors: err.graphQLErrors
+      });
+    }
+  });
+
+  const [updateRole] = useMutation(UPDATE_USER_ROLE, {
+    onError: (err) => console.error('Mutation error:', err)
+  });
+
+  useEffect(() => {
+    console.log('Current token:', localStorage.getItem('token'));
+  }, []);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
@@ -43,8 +60,11 @@ export default function AdminUsersPage() {
     }
   };
 
-  if (loading) return <AdminLayout><div>Loading...</div></AdminLayout>;
-  if (error) return <AdminLayout><div>Error: {error.message}</div></AdminLayout>;
+  if (loading) return (<AdminRoute><AdminLayout><div>Loading...</div></AdminLayout></AdminRoute>);
+  if (error) {
+    console.error('GraphQL Error:', error);
+    return (<AdminRoute><AdminLayout><div>Error loading user data</div></AdminLayout></AdminRoute>);
+  };
 
   return (
     <AdminRoute>

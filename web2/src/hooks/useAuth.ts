@@ -1,6 +1,7 @@
 // web2/src/hooks/useAuth.ts
 import { useState, useEffect } from 'react';
 import { getAuthUserRole, isAuthenticated } from '../lib/auth';
+import { Role } from '../types/roles';
 
 export function useAuth() {
   const [mounted, setMounted] = useState(false);

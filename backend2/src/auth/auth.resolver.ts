@@ -1,7 +1,8 @@
-import { Arg, Mutation, Query, Resolver, Ctx } from 'type-graphql';
+import { Arg, Mutation, Query, Resolver, Ctx, UseMiddleware } from 'type-graphql';
 import { AuthService } from './auth.service';
 import { AuthPayload, RegisterInput, LoginInput, User } from './auth.types';
 import { Context } from '../context';
+import { isAdmin, isAuth } from './auth.middleware';
 
 @Resolver()
 export class AuthResolver {
@@ -34,5 +35,11 @@ export class AuthResolver {
     if (!ctx.userId) return null;
     const prismaUser = await AuthService.getUserById(ctx.userId);
     return prismaUser ? new User(prismaUser) : null;
+  }
+
+  @Query(() => [User])
+  @UseMiddleware(isAuth, isAdmin) // Requires admin privileges
+  async users(@Ctx() ctx: Context) {
+    return ctx.prisma.user.findMany();
   }
 }

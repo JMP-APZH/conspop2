@@ -1,12 +1,13 @@
 import 'reflect-metadata';
 import { ApolloServer } from '@apollo/server';
-import { startStandaloneServer } from '@apollo/server/standalone';
+import { expressMiddleware } from '@apollo/server/express4';
 import { buildSchema } from 'type-graphql';
 import { AuthResolver } from './auth/auth.resolver';
 import { createContext } from './context';
-import { StandaloneServerContextFunctionArgument } from '@apollo/server/standalone';
 import { Request } from 'express';
-
+import cors from 'cors';
+import express from 'express';
+import bodyParser from 'body-parser';
 import 'dotenv/config';
 
 async function bootstrap() {
@@ -15,18 +16,30 @@ async function bootstrap() {
     authChecker: ({ context }) => !!context.userId,
   });
 
+  const app = express();
   const server = new ApolloServer({ schema });
 
-  const { url } = await startStandaloneServer(server, {
-    context: async ({ req }: StandaloneServerContextFunctionArgument) => {
-      // Convert IncomingMessage to Express Request-like object if needed
-      const request = req as unknown as Request;
-      return createContext({ req: request });
-    },
-    listen: { port: 4000 }
-  });
+  await server.start();
 
-  console.log(`🚀 Server ready at ${url}`);
+  const corsOptions = {
+    origin: ['http://localhost:3000'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
+  };
+  
+  app.use(
+    '/graphql',
+    cors(corsOptions),
+    bodyParser.json(),
+    expressMiddleware(server, {
+      context: async ({ req }) => createContext({ req })
+    })
+  );
+
+  const PORT = 4000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
+  });
 }
 
 bootstrap().catch(err => console.error(err));

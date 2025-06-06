@@ -1,14 +1,13 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { FiHome, FiInfo, FiMail, FiUser } from 'react-icons/fi';
-import { FiSettings } from 'react-icons/fi';
+import { FiHome, FiInfo, FiMail, FiUser, FiSettings } from 'react-icons/fi';
 import { RiSurveyFill } from 'react-icons/ri';
 import { SiLimesurvey } from "react-icons/si";
 import { AiOutlineLogin, AiOutlineLogout } from "react-icons/ai";
-import { getAuthUserRole, isAuthenticated } from '../../lib/auth';
 import { useApolloClient } from '@apollo/client';
 import { removeAuthToken } from '../../lib/auth';
-import { ReactNode, useState } from 'react';
+import { ReactNode } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 import './globals.css'
 
 interface NavLinkProps {
@@ -36,11 +35,7 @@ const NavLink = ({ href, icon, text = '' }: NavLinkProps) => {
 export default function Navbar() {
   const router = useRouter();
   const client = useApolloClient();
-  const authenticated = isAuthenticated();
-  // const userRole = authenticated ? getAuthUserRole() : null; // You'll need to implement getAuthUserRole()
-
-  const [mounted, setMounted] = useState(false);
-  const [userRole, setUserRole] = useState<Role | null>(null);
+  const { mounted, authenticated, userRole } = useAuth();
 
   const handleLogout = () => {
     removeAuthToken();
@@ -51,25 +46,33 @@ export default function Navbar() {
   // Don't render auth-dependent content during SSR
   if (!mounted) {
     return (
-      <nav className="hidden md:flex justify-center items-center p-4 bg-gray-800 text-yellow-300">
-        {/* Basic non-auth dependent links */}
-        <NavLink href="/" icon={<FiHome />} text="A Kay" />
-        <NavLink href="/about" icon={<FiInfo />} text="Sa ou pou sav'" />
-        <NavLink href="/contact" icon={<FiMail />} text="Késyon ? Pa ézité !" />
-      </nav>
+      <>
+        {/* Desktop Navigation (SSR) */}
+        <nav className="hidden md:flex justify-center items-center p-4 bg-gray-800 text-yellow-300">
+          <NavLink href="/" icon={<FiHome />} text="A Kay" />
+          <NavLink href="/about" icon={<FiInfo />} text="Sa ou pou sav'" />
+          <NavLink href="/contact" icon={<FiMail />} text="Késyon ? Pa ézité !" />
+        </nav>
+        
+        {/* Mobile Navigation (SSR) */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center p-3 bg-gray-800 border-t border-gray-700 text-yellow-300">
+          <NavLink href="/" icon={<FiHome />} />
+          <NavLink href="/about" icon={<FiInfo />} />
+          <NavLink href="/contact" icon={<FiMail />} />
+        </nav>
+      </>
     );
   }
 
   // Full render after hydration
   return (
     <>
-      {/* Desktop Navigation (Top) */}
+      {/* Desktop Navigation (Client) */}
       <nav className="hidden md:flex justify-center items-center p-4 bg-gray-800 text-yellow-300">
         <NavLink href="/" icon={<FiHome />} text="A Kay" />
         <NavLink href="/surveys" icon={<RiSurveyFill />} text="Avi a zot'" />
         <NavLink href="/results" icon={<SiLimesurvey />} text="Rézulta tout' moun'" />
         {authenticated && <NavLink href="/profile" icon={<FiUser />} text="Pwofil aw'" />}
-        {/* Add Admin Dashboard link */}
         {authenticated && userRole === 'ADMIN' && (
           <NavLink href="/admin/dashboard" icon={<FiSettings />} text="Admin" />
         )}
@@ -88,13 +91,12 @@ export default function Navbar() {
         )}
       </nav>
 
-      {/* Mobile Navigation (Bottom) - Fixed */}
+      {/* Mobile Navigation (Client) */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center p-3 bg-gray-800 border-t border-gray-700 text-yellow-300">
         <NavLink href="/" icon={<FiHome />} />
         <NavLink href="/surveys" icon={<RiSurveyFill />} />
         <NavLink href="/results" icon={<SiLimesurvey />} />
         {authenticated && <NavLink href="/profile" icon={<FiUser />} />}
-        {/* Add Admin Dashboard link for mobile */}
         {authenticated && userRole === 'ADMIN' && (
           <NavLink href="/admin/dashboard" icon={<FiSettings />} />
         )}
