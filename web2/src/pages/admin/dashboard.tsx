@@ -26,6 +26,14 @@ const UPDATE_USER_ROLE = gql`
   }
 `;
 
+const GET_STATS = gql`
+  query GetStats {
+    totalUsersCount
+    dailyActiveUsers
+    weeklyActiveUsers
+  }
+`;
+
 export default function AdminUsersPage() {
   const { loading, error, data, refetch } = useQuery(GET_USERS, {
     fetchPolicy: 'network-only', // Always fetch fresh data
@@ -41,6 +49,9 @@ export default function AdminUsersPage() {
   const [updateRole] = useMutation(UPDATE_USER_ROLE, {
     onError: (err) => console.error('Mutation error:', err)
   });
+
+  // to use the newly added stats:
+  const { data: statsData } = useQuery(GET_STATS);
 
   useEffect(() => {
     console.log('Current token:', localStorage.getItem('token'));
@@ -71,6 +82,30 @@ export default function AdminUsersPage() {
       <AdminLayout>
         <div className="max-w-6xl mx-auto py-12 px-4">
           <h1 className="text-2xl font-bold text-yellow-300 mb-6">Jesyon Itilizatè yo</h1>
+
+          {/* Newly added statistics cards at the top */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+              <h3 className="text-lg font-medium text-white mb-2">Total Itilizatè</h3>
+              <p className="text-3xl font-bold text-yellow-300">
+                {statsData?.totalUsersCount || 0}
+              </p>
+            </div>
+            
+            <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+              <h3 className="text-lg font-medium text-white mb-2">Konekte 24h</h3>
+              <p className="text-3xl font-bold text-yellow-300">
+                {statsData?.dailyActiveUsers || 0}
+              </p>
+            </div>
+            
+            <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+              <h3 className="text-lg font-medium text-white mb-2">Konekte 7 jou</h3>
+              <p className="text-3xl font-bold text-yellow-300">
+                {statsData?.weeklyActiveUsers || 0}
+              </p>
+            </div>
+            </div>
           
           <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
             <div className="overflow-x-auto">

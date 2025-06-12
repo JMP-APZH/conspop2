@@ -50,5 +50,36 @@ export const AuthService = {
 
   async getUserById(id: string): Promise<PrismaUser | null> {
     return prisma.user.findUnique({ where: { id } });
+  },
+
+  async getTotalUsersCount(): Promise<number> {
+    return prisma.user.count();
+  },
+  
+  async getDailyActiveUsers(): Promise<number> {
+    const oneDayAgo = new Date();
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+    
+    return prisma.user.count({
+      where: {
+        lastLoginAt: {
+          gte: oneDayAgo
+        }
+      }
+    });
+  },
+  
+  async getWeeklyActiveUsers(): Promise<number> {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+    return prisma.user.count({
+      where: {
+        lastLoginAt: {
+          gte: oneWeekAgo
+        }
+      }
+    });
   }
+
 };
