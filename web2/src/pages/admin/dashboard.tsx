@@ -93,14 +93,14 @@ export default function AdminUsersPage() {
             </div>
             
             <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-              <h3 className="text-lg font-medium text-white mb-2">Konekte 24h</h3>
+              <h3 className="text-lg font-medium text-white mb-2">Konèkté dénié 24h la</h3>
               <p className="text-3xl font-bold text-yellow-300">
                 {statsData?.dailyActiveUsers || 0}
               </p>
             </div>
             
             <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-              <h3 className="text-lg font-medium text-white mb-2">Konekte 7 jou</h3>
+              <h3 className="text-lg font-medium text-white mb-2">Konèkté dénié 7 jou la</h3>
               <p className="text-3xl font-bold text-yellow-300">
                 {statsData?.weeklyActiveUsers || 0}
               </p>
