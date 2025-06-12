@@ -97,3 +97,15 @@ export class AuthPayload {
   @Field(() => User)
   user!: User;
 }
+
+@ObjectType()
+export class UserStats {
+  @Field()
+  totalUsersCount!: number;
+  
+  @Field()
+  dailyActiveUsers!: number;
+  
+  @Field()
+  weeklyActiveUsers!: number;
+}

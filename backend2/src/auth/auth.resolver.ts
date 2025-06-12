@@ -1,4 +1,4 @@
-import { Arg, Mutation, Query, Resolver, Ctx, UseMiddleware } from 'type-graphql';
+import { Arg, Mutation, Query, Resolver, Ctx, UseMiddleware, Int } from 'type-graphql';
 import { AuthService } from './auth.service';
 import { AuthPayload, RegisterInput, LoginInput, User } from './auth.types';
 import { Context } from '../context';
