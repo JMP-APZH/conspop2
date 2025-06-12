@@ -42,4 +42,22 @@ export class AuthResolver {
   async users(@Ctx() ctx: Context) {
     return ctx.prisma.user.findMany();
   }
+
+  @Query(() => Int)
+@UseMiddleware(isAuth, isAdmin)
+async totalUsersCount(@Ctx() ctx: Context): Promise<number> {
+  return AuthService.getTotalUsersCount();
+}
+
+@Query(() => Int)
+@UseMiddleware(isAuth, isAdmin)
+async dailyActiveUsers(@Ctx() ctx: Context): Promise<number> {
+  return AuthService.getDailyActiveUsers();
+}
+
+@Query(() => Int)
+@UseMiddleware(isAuth, isAdmin)
+async weeklyActiveUsers(@Ctx() ctx: Context): Promise<number> {
+  return AuthService.getWeeklyActiveUsers();
+}
 }
