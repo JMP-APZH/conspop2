@@ -30,7 +30,14 @@ export const AuthService = {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) throw new Error('Invalid password');
     
-    return user;
+    // initial end of login service w/o last login time
+    // return user;
+
+    // Update last login time
+    return prisma.user.update({
+    where: { id: user.id },
+    data: { lastLoginAt: new Date() }
+  });
   },
 
   generateToken(user: { id: string; role: PrismaRole }): string {
