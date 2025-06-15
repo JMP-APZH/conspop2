@@ -6,10 +6,33 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  // output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = "postgresql://voting_user:voting_pass@localhost:5433/voting_db"
+}
+
+model VotingSession {
+  id        String   @id @default(uuid())
+  title     String
+  ideas     Idea[]
+  votes     Vote[]
+  maxPriorities Int  // e.g., 15
+}
+
+model Idea {
+  id        String   @id @default(uuid())
+  title     String
+  session   VotingSession @relation(fields: [sessionId], references: [id])
+  sessionId String
+}
+
+model Vote {
+  id        String   @id @default(uuid())
+  session   VotingSession @relation(fields: [sessionId], references: [id])
+  sessionId String
+  voterId   String   // Optional: Track voters
+  scores    Json     // For Score Voting: { "ideaId1": 5, "ideaId2": 3 }
 }
