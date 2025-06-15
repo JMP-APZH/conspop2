@@ -12,30 +12,30 @@ const Home: NextPage = () => {
       <div className="min-h-screen bg-yellow-300 text-white">
         {/* Main Content */}
         <div className='py-12'>
-          <div className="-ml-5 mr-5">
-            <h1 className="font-bold text-center bg-red-800 p-2 text-lg md:text-xl lg:text-4xl">
+          <div className="-ml-5 mr-15">
+            <h1 className="ml-15 mr-10 font-bold text-center bg-red-800 p-2 text-lg md:text-xl lg:text-4xl">
               Kontan Wè Zot'
             </h1>
-            <h1 className="font-bold text-center bg-red-800 mb-4 pb-2 text-lg md:text-xl lg:text-4xl">
+            <h1 className="ml-15 mr-10 font-bold text-center bg-red-800 mb-4 pb-2 text-lg md:text-xl lg:text-4xl">
               Lyannaj' pou fè péyi a vansé
             </h1>
           </div>
           
-          <h1 className="font-bold text-center bg-green-800 text-lg md:text-xl lg:text-4xl">
+          <h1 className="ml-15 mr-15 font-bold text-center bg-green-800 text-lg md:text-xl lg:text-4xl">
             Consultation Populaire - Ed. Martinique
           </h1>
-          <h1 className="font-bold italic text-center mb-4 bg-green-800 p-2 text-lg md:text-xl lg:text-4xl">
+          <h1 className="ml-15 mr-15 font-bold italic text-center mb-4 bg-green-800 p-2 text-lg md:text-xl lg:text-4xl">
             Bienvenu-e-s à notre expérience sociale pour la Martinique
           </h1>
 
-          <div className="ml-5 -mr-5">
-            <p className="font-bold text-center italic mx-auto bg-black text-sm md:text-base lg:text-xl">
+          <div className="ml-20 -mr-10">
+            <p className="mr-20 font-bold text-center italic mx-auto bg-black text-sm md:text-base lg:text-xl">
               En participant à cette expérience, vous permettrez à la population Martiniquaise
             </p>
-            <p className="font-bold text-center italic mx-auto bg-black text-sm md:text-base lg:text-xl">
+            <p className="mr-20 font-bold text-center italic mx-auto bg-black text-sm md:text-base lg:text-xl">
               de disposer de ses propres données pour des prises de décision
             </p>
-            <p className="font-bold text-center italic mx-auto bg-black text-sm md:text-base lg:text-xl mb-8">
+            <p className="mr-20 font-bold text-center italic mx-auto bg-black text-sm md:text-base lg:text-xl mb-8">
               pragmatiques et au plus près des priorités des Martiniquais-es.
             </p>
           </div>
