@@ -2,9 +2,10 @@
   "name": "voting-server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node index.ts",
+    "db:deploy": "npx prisma migrate deploy && npx prisma generate"
   },
   "keywords": [],
   "author": "",
@@ -12,14 +13,16 @@
   "type": "commonjs",
   "dependencies": {
     "@apollo/server": "^4.12.2",
+    "@prisma/client": "^6.10.0",
     "@types/node": "^24.0.1",
+    "express": "^5.1.0",
     "graphql": "^16.11.0",
-    "prisma": "^6.9.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
     "zod": "^3.25.64"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "prisma": "^6.10.0"
   }
 }

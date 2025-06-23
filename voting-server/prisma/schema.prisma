@@ -6,12 +6,12 @@
 
 generator client {
   provider = "prisma-client-js"
-  // output   = "../src/generated/prisma"
+  output = "../generated/prisma_client"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://voting_user:voting_pass@localhost:5433/voting_db"
+  url      = env("DATABASE_URL")
 }
 
 model VotingSession {
