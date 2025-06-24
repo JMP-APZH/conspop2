@@ -1,0 +1,26 @@
+type VotingSession {
+  id: ID!
+  title: String!
+  ideas: [Idea!]!
+}
+
+type Idea {
+  id: ID!
+  title: String!
+}
+
+type Mutation {
+  createSession(title: String!, ideas: [String!]!): VotingSession!
+  submitVote(sessionId: ID!, scores: JSON!): Boolean!
+}
+
+type Query {
+  getResults(sessionId: ID!): [IdeaScore!]!
+}
+
+type IdeaScore {
+  ideaId: ID!
+  score: Float!
+}
+
+scalar JSON
