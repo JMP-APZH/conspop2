@@ -2,6 +2,7 @@ type VotingSession {
   id: ID!
   title: String!
   ideas: [Idea!]!
+  maxPriorities: Int!
 }
 
 type Idea {
@@ -9,18 +10,19 @@ type Idea {
   title: String!
 }
 
+type IdeaScore {
+  ideaId: ID!
+  title: String!
+  score: Float!
+}
+
 type Mutation {
-  createSession(title: String!, ideas: [String!]!): VotingSession!
-  submitVote(sessionId: ID!, scores: JSON!): Boolean!
+  createSession(title: String!, ideas: [String!]!, maxPriorities: Int): VotingSession!
+  submitVote(sessionId: ID!, voterId: String!, scores: JSON!): Boolean!
 }
 
 type Query {
   getResults(sessionId: ID!): [IdeaScore!]!
-}
-
-type IdeaScore {
-  ideaId: ID!
-  score: Float!
 }
 
 scalar JSON
