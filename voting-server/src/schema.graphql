@@ -1,28 +1,71 @@
+# voting-server/src/schema.graphql
+
 type VotingSession {
   id: ID!
   title: String!
   ideas: [Idea!]!
   maxPriorities: Int!
+  createdAt: String!
+  updatedAt: String!
 }
 
 type Idea {
   id: ID!
   title: String!
+  description: String # Added from your existing schema
 }
 
 type IdeaScore {
   ideaId: ID!
   title: String!
   score: Float!
+  points: Int # Added for Borda Count
+  percentage: Float # Added for Ranked Choice
+  rank: Int # Added for all ranked methods
+}
+
+type VotingResult {
+  method: String!
+  results: [IdeaScore!]!
+  winners: [Idea!] # Specifically for Condorcet/Ranked Choice
+}
+
+input VoteInput {
+  ideaId: ID!
+  score: Int # For Score Voting (kept from your existing schema)
+  rank: Int # For Ranked methods (new addition)
+}
+
+enum VotingMethod {
+  SCORE
+  RANKED_CHOICE
+  BORDA_COUNT
+  CONDORCET
 }
 
 type Mutation {
+  # Kept your existing mutations
   createSession(title: String!, ideas: [String!]!, maxPriorities: Int): VotingSession!
-  submitVote(sessionId: ID!, voterId: String!, scores: JSON!): Boolean!
+  
+  # Enhanced submitVote to support multiple methods
+  submitVote(
+    sessionId: ID!
+    voterId: String!
+    votes: [VoteInput!]! # Changed from scores to votes
+    method: VotingMethod! # Added to specify voting method
+  ): Boolean!
 }
 
 type Query {
-  getResults(sessionId: ID!): [IdeaScore!]!
+  # Enhanced getResults to support multiple methods
+  getResults(
+    sessionId: ID!
+    method: VotingMethod # Added to specify which method's results to return
+  ): VotingResult!
+  
+  # Added to get all methods' results at once
+  getAllResults(sessionId: ID!): [VotingResult!]!
 }
 
+# Keep your existing JSON scalar if needed
 scalar JSON
