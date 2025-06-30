@@ -89,6 +89,17 @@ export class User {
   }
 }
 
+export class UserVerification {
+  @Field()
+  exists: boolean;
+
+  @Field({ nullable: true })
+  email?: string;
+
+  @Field({ nullable: true })
+  name?: string;
+}
+
 @ObjectType()
 export class AuthPayload {
   @Field()

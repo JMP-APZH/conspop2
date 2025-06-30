@@ -1,6 +1,6 @@
 import { Arg, Mutation, Query, Resolver, Ctx, UseMiddleware, Int } from 'type-graphql';
 import { AuthService } from './auth.service';
-import { AuthPayload, RegisterInput, LoginInput, User } from './auth.types';
+import { AuthPayload, RegisterInput, LoginInput, User, UserVerification } from './auth.types';
 import { Context } from '../context';
 import { isAdmin, isAuth } from './auth.middleware';
 
@@ -60,4 +60,23 @@ async dailyActiveUsers(@Ctx() ctx: Context): Promise<number> {
 async weeklyActiveUsers(@Ctx() ctx: Context): Promise<number> {
   return AuthService.getWeeklyActiveUsers();
 }
+
+@Query(() => UserVerification)
+  @UseMiddleware(isAuth) // Require authentication
+  async verifyUser(
+    @Arg("userId") userId: string,
+    @Ctx() ctx: Context
+  ) {
+    // Only allow admins or the user themselves to verify
+    if (ctx.userId !== userId && !ctx.isAdmin) {
+      throw new Error("Unauthorized verification request");
+    }
+
+    const user = await AuthService.getUserById(userId);
+    return {
+      exists: !!user,
+      email: user?.email,
+      name: user ? `${user.firstName} ${user.lastName}` : undefined
+    };
+  }
 }
