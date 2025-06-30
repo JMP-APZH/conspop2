@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  // output = "../generated/prisma_client"
   output   = "../node_modules/.prisma/client"
 }
 
@@ -20,20 +19,40 @@ model VotingSession {
   title     String
   ideas     Idea[]
   votes     Vote[]
-  maxPriorities Int  // e.g., 15
+  maxPriorities Int   @default(15)  // e.g., 15
+  createdAt      DateTime    @default(now())
+  updatedAt   DateTime @updatedAt         // This should auto-update
+  description    String?
 }
 
 model Idea {
-  id        String   @id @default(uuid())
-  title     String
-  session   VotingSession @relation(fields: [sessionId], references: [id])
-  sessionId String
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  session     VotingSession @relation(fields: [sessionId], references: [id])
+  sessionId   String
+  votes       Vote[]
+  createdAt   DateTime @default(now())
 }
 
 model Vote {
   id        String   @id @default(uuid())
   session   VotingSession @relation(fields: [sessionId], references: [id])
   sessionId String
-  voterId   String   // Optional: Track voters
-  scores    Json     // For Score Voting: { "ideaId1": 5, "ideaId2": 3 }
+  // Reference user from auth service without full duplication
+  userId      String   @default("")   // References backend2.User.id
+  userEmail   String?  // Optional: For display purposes only
+  idea        Idea?    @relation(fields: [ideaId], references: [id])
+  ideaId      String?
+  score       Int?     
+  rank        Int?     
+  method      String   @default("SCORE")   
+  createdAt   DateTime @default(now())
+  scores      Json?    // Legacy field
+
+  @@unique([userId, ideaId, sessionId], name: "unique_vote_per_idea")
+  @@index([userId])
 }
+
+
+

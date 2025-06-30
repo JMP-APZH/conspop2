@@ -25,4 +25,6 @@ model User {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   lastLoginAt     DateTime? @map("last_login_at") // added to track user logins
+  // // Add this to track voting participation
+  // votes           Vote[]    @relation("UserVotes") // Reference to votes in voting-server
 }
