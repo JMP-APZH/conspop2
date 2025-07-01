@@ -32,9 +32,66 @@ interface IdeaResult {
   rank?: number;
 }
 
+interface UserVerification {
+  exists: boolean;
+  email?: string;
+  name?: string;
+}
+
+interface VoteData {
+  ideaId: string;
+  score?: number;
+  rank?: number;
+}
+
 // Helper function to check if object is record with string keys (kept from your code)
 function isJsonObject(obj: unknown): obj is Record<string, unknown> {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
+}
+
+async function verifyUser(userId: string): Promise<UserVerification> {
+  try {
+    const response = await fetch(process.env.BACKEND2_URL + '/graphql', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.SERVICE_TOKEN}`
+      },
+      body: JSON.stringify({
+        query: `
+          query VerifyUser($userId: ID!) {
+            verifyUser(userId: $userId) {
+              exists
+              email
+              name
+            }
+          }
+        `,
+        variables: { userId }
+      })
+    });
+
+    const { data, errors } = await response.json();
+    if (errors) throw new Error(errors[0].message);
+    return data.verifyUser;
+  } catch (error) {
+    console.error('User verification failed:', error);
+    return { exists: false };
+  }
+}
+
+async function withErrorHandling<T>(
+  fn: (...args: any[]) => Promise<T>,
+  ...args: any[]
+): Promise<T> {
+  try {
+    return await fn(...args);
+  } catch (error) {
+    console.error('Resolver error:', error);
+    throw new Error(
+      error instanceof Error ? error.message : 'Internal server error'
+    );
+  }
 }
 
 const resolvers = {
@@ -43,10 +100,8 @@ const resolvers = {
     parseValue: (value: unknown) => value,
   },
   Mutation: {
-    createSession: async (
-      _: unknown, 
-      { title, ideas, maxPriorities = 15 }: CreateSessionInput
-    ) => {
+    createSession: async (...args) => withErrorHandling(async () => {
+      const [_, { title, ideas, maxPriorities = 15 }] = args;
       return prisma.votingSession.create({
         data: {
           title,
@@ -57,17 +112,15 @@ const resolvers = {
         },
         include: { ideas: true }
       });
-    },
+    }, ...args),
 
-    submitVote: async (
-      _: unknown, 
-      { sessionId, voterId, scores, votes, method = 'SCORE' }: SubmitVoteInput
-    ) => {
-      // Backward compatibility: convert old scores format to new votes format
-      const voteData = votes || (scores ? Object.entries(scores).map(([ideaId, score]) => ({
-        ideaId,
-        score,
-        rank: undefined
+    submitVote: async (...args) => withErrorHandling(async () => {
+      const [_, { sessionId, voterId, scores, votes, method = 'SCORE' }] = args;
+      const userInfo = await verifyUser(voterId);
+      if (!userInfo.exists) throw new Error('Invalid user credentials');
+
+      const voteData: VoteData[] = votes || (scores ? Object.entries(scores).map(([ideaId, score]) => ({
+        ideaId, score, rank: undefined
       })) : [];
 
       // Validate based on method
@@ -89,7 +142,8 @@ const resolvers = {
       await prisma.vote.createMany({
         data: voteData.map(vote => ({
           sessionId,
-          voterId,
+          userEmail: userInfo.email, // Cache user info
+          userName: userInfo.name,
           ideaId: vote.ideaId,
           score: vote.score,
           rank: vote.rank,
@@ -98,18 +152,17 @@ const resolvers = {
       });
 
       return true;
-    },
+    }, ...args),
   },
+
   Query: {
-    getResults: async (
-      _: unknown, 
-      { sessionId, method = 'SCORE' }: GetResultsInput
-    ): Promise<IdeaResult[]> => {
+    getResults: async (...args) => withErrorHandling(async () => { 
+      const [_, { sessionId, method = 'SCORE' }] = args;
+
       const [votes, ideas] = await Promise.all([
         prisma.vote.findMany({ 
           where: { sessionId },
-          select: { 
-            voterId: true,
+          select: {
             ideaId: true,
             score: true,
             rank: true,
@@ -124,7 +177,6 @@ const resolvers = {
 
       // Convert votes to common format
       const normalizedVotes = votes.map(vote => ({
-        userId: vote.voterId,
         ideaId: vote.ideaId,
         score: vote.score ?? undefined,
         rank: vote.rank ?? undefined
@@ -159,16 +211,13 @@ const resolvers = {
         percentage: 'percentage' in result ? result.percentage : undefined,
         rank: index + 1
       }));
-    },
+    }, ...args),
 
     // New query to get all methods' results
-    getAllResults: async (
-      _: unknown,
-      { sessionId }: { sessionId: string }
-    ) => {
-      const methods: ('SCORE' | 'RANKED_CHOICE' | 'BORDA_COUNT' | 'CONDORCET')[] = [
-        'SCORE', 'RANKED_CHOICE', 'BORDA_COUNT', 'CONDORCET'
-      ];
+    getAllResults: async (...args) => withErrorHandling(async () => {
+      const [_, { sessionId }] = args;
+      const methods = ['SCORE', 'RANKED_CHOICE', 'BORDA_COUNT', 'CONDORCET'] 
+    as const;
       
       return Promise.all(
         methods.map(method => 
@@ -176,7 +225,7 @@ const resolvers = {
             .then(results => ({ method, results }))
         )
       );
-    }
+    }, ...args)
   },
 };
 

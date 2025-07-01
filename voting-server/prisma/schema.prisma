@@ -41,7 +41,8 @@ model Vote {
   sessionId String
   // Reference user from auth service without full duplication
   userId      String   @default("")   // References backend2.User.id
-  userEmail   String?  // Optional: For display purposes only
+  userEmail   String?  @db.VarChar(255)
+  userName    String?  @db.VarChar(255)
   idea        Idea?    @relation(fields: [ideaId], references: [id])
   ideaId      String?
   score       Int?     
