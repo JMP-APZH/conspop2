@@ -106,21 +106,24 @@ async function verifyUser(userId: string): Promise<UserVerification> {
       },
       body: JSON.stringify({
         query: `
-          query VerifyUser($userId: ID!) {
-            verifyUser(userId: $userId) {
+          query ServiceVerifyUser($userId: String!, $serviceToken: String!) {
+            serviceVerifyUser(userId: $userId, serviceToken: $serviceToken) {
               exists
               email
               name
             }
           }
         `,
-        variables: { userId }
+        variables: { 
+          userId,
+          serviceToken: process.env.SERVICE_SECRET 
+        }
       })
     });
 
     const { data, errors } = await response.json();
     if (errors) throw new Error(errors[0].message);
-    return data.verifyUser;
+    return data.serviceVerifyUser;
   } catch (error) {
     console.error('User verification failed:', error);
     return { exists: false };
@@ -189,7 +192,7 @@ const submitVoteHandler = async ({
   await prisma.vote.createMany({
     data: voteData.map(vote => ({
       sessionId,
-      voterId,
+      userId: voterId,  // Changed from voterId to userId
       userEmail: userInfo.email,
       userName: userInfo.name,
       ideaId: vote.ideaId,

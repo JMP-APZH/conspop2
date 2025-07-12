@@ -62,16 +62,24 @@ async weeklyActiveUsers(@Ctx() ctx: Context): Promise<number> {
 }
 
 @Query(() => UserVerification)
-  @UseMiddleware(isAuth) // Require authentication
-  async verifyUser(
+  // @UseMiddleware(isAuth) // Require authentication
+  // async verifyUser(
+  //   @Arg("userId") userId: string,
+  //   @Ctx() ctx: Context
+  // ) {
+  //   // Allow if:
+  //   // 1. User is requesting their own info (ctx.userId === userId), OR
+  //   // 2. User is an ADMIN (ctx.userRole === 'ADMIN')
+  //   if (ctx.userId !== userId && ctx.userRole !== 'ADMIN') {
+  //     throw new Error("Unauthorized verification request");
+  //   }
+
+  async serviceVerifyUser(
     @Arg("userId") userId: string,
-    @Ctx() ctx: Context
+    @Arg("serviceToken") serviceToken: string
   ) {
-    // Allow if:
-    // 1. User is requesting their own info (ctx.userId === userId), OR
-    // 2. User is an ADMIN (ctx.userRole === 'ADMIN')
-    if (ctx.userId !== userId && ctx.userRole !== 'ADMIN') {
-      throw new Error("Unauthorized verification request");
+    if (serviceToken !== process.env.SERVICE_SECRET) {
+      throw new Error("Invalid service token");
     }
 
     const user = await AuthService.getUserById(userId);
