@@ -1,218 +1,447 @@
-// voting-server/src/lib/voting-methods.ts
+import { PrismaClient, Prisma } from '@prisma/client';
+import type { Idea as PrismaIdea } from '@prisma/client';
 
-type Vote = {
+const prisma = new PrismaClient();
+
+// Type definitions (keeping yours and adding new ones)
+interface CreateSessionInput {
+  title: string;
+  ideas: string[];
+  maxPriorities?: number;
+}
+
+interface Vote {
   userId: string;
   ideaId: string;
-  score?: number; // For Score Voting
-  rank?: number; // For Ranked Choice/Borda/Condorcet
-};
+  score?: number;
+  rank?: number;
+}
 
-type Idea = {
+interface NormalizedVote {
+  userId: string;
+  ideaId: string;
+  score?: number;
+  rank?: number;
+}
+
+interface VotingMethodResult extends PrismaIdea {
+  score?: number;
+  points?: number;
+  percentage?: number;
+  rank?: number;
+}
+
+interface SubmitVoteInput {
+  sessionId: string;
+  voterId: string;
+  scores?: Record<string, number>; // Made optional for backward compatibility
+  votes?: Array<{ ideaId: string; score?: number; rank?: number }>; // New format
+  method?: 'SCORE' | 'RANKED_CHOICE' | 'BORDA_COUNT' | 'CONDORCET'; // Added method
+}
+
+interface GetResultsInput {
+  sessionId: string;
+  method?: 'SCORE' | 'RANKED_CHOICE' | 'BORDA_COUNT' | 'CONDORCET'; // Added method
+}
+
+interface IdeaResult {
+  ideaId: string;
+  title: string;
+  score?: number;
+  points?: number;
+  percentage?: number;
+  rank?: number;
+}
+
+interface UserVerification {
+  exists: boolean;
+  email?: string;
+  name?: string;
+}
+
+interface VoteData {
+  ideaId: string;
+  score?: number;
+  rank?: number;
+}
+
+interface VotingResult {
+  method: string;
+  results: IdeaResult[];
+  winners: Idea[];
+}
+
+interface ResolverArgs<T> {
+  _: unknown;
+  args: T;
+  context: any;
+  info: any;
+}
+
+interface Idea {
   id: string;
   title: string;
-  description: string;
-};
+  // description: string; // Non-nullable
+  description: string | null; // Make this match Prisma's type
+}
 
-export class VotingMethods {
+export const VotingMethods = {
   /**
-   * 1. Score Voting / Dotmocracy
-   * Each voter assigns a score to each idea (e.g., 0-5)
-   * The idea with the highest average score wins
+   * Score Voting - Averages all scores for each idea
    */
-  static scoreVoting(ideas: Idea[], votes: Vote[]): Idea[] {
-    // Group votes by idea
-    const ideaScores: Record<string, { sum: number; count: number }> = {};
-
-    ideas.forEach(idea => {
-      ideaScores[idea.id] = { sum: 0, count: 0 };
-    });
-
+  scoreVoting(ideas: PrismaIdea[], votes: NormalizedVote[]): VotingMethodResult[] {
+    const ideaScores = new Map<string, { sum: number; count: number }>();
+    
+    // Sum all scores for each idea
     votes.forEach(vote => {
       if (vote.score !== undefined) {
-        ideaScores[vote.ideaId].sum += vote.score;
-        ideaScores[vote.ideaId].count += 1;
+        const current = ideaScores.get(vote.ideaId) || { sum: 0, count: 0 };
+        ideaScores.set(vote.ideaId, {
+          sum: current.sum + vote.score,
+          count: current.count + 1
+        });
       }
     });
 
-    // Calculate average scores
-    const scoredIdeas = ideas.map(idea => {
-      const scoreData = ideaScores[idea.id];
-      const average = scoreData.count > 0 ? scoreData.sum / scoreData.count : 0;
-      return { ...idea, score: average };
-    });
-
-    // Sort by score descending
-    return scoredIdeas.sort((a, b) => (b.score || 0) - (a.score || 0));
-  }
+    // Calculate averages and return sorted results
+    return ideas.map(idea => {
+      const scoreData = ideaScores.get(idea.id);
+      const averageScore = scoreData ? scoreData.sum / scoreData.count : 0;
+      return {
+        ...idea,
+        score: averageScore,
+        percentage: scoreData ? (averageScore / 10) * 100 : 0 // Assuming 10-point scale
+      };
+    }).sort((a, b) => (b.score || 0) - (a.score || 0)); // Sort high to low
+  },
 
   /**
-   * 2. Ranked Choice (Instant Runoff Voting)
-   * Voters rank ideas in order of preference
-   * Uses elimination rounds until a majority is found
+   * Ranked Choice Voting - Counts first-choice votes
    */
-  static rankedChoiceVoting(ideas: Idea[], votes: Vote[]): Idea[] {
-    // Transform votes into rankings per user
-    const userRankings: Record<string, { ideaId: string; rank: number }[]> = {};
+  rankedChoiceVoting(ideas: PrismaIdea[], votes: NormalizedVote[]): VotingMethodResult[] {
+    // Count how many times each idea was ranked first
+    const firstChoiceCounts = votes
+      .filter(vote => vote.rank === 1)
+      .reduce((countMap, vote) => {
+        countMap.set(vote.ideaId, (countMap.get(vote.ideaId) || 0) + 1);
+        return countMap;
+      }, new Map<string, number>());
+
+    return ideas.map(idea => ({
+      ...idea,
+      points: firstChoiceCounts.get(idea.id) || 0,
+      percentage: firstChoiceCounts.get(idea.id) 
+        ? (firstChoiceCounts.get(idea.id)! / votes.length) * 100 
+        : 0
+    })).sort((a, b) => (b.points || 0) - (a.points || 0));
+  },
+
+  /**
+   * Borda Count - Gives points based on ranking position
+   */
+  bordaCount(ideas: PrismaIdea[], votes: NormalizedVote[]): VotingMethodResult[] {
+    const ideaPoints = new Map<string, number>();
+    const maxRank = Math.max(...votes.map(v => v.rank || 0), 0);
 
     votes.forEach(vote => {
-      if (!userRankings[vote.userId]) {
-        userRankings[vote.userId] = [];
-      }
       if (vote.rank !== undefined) {
-        userRankings[vote.userId].push({ ideaId: vote.ideaId, rank: vote.rank });
+        // Higher ranks get more points (1st place gets max points)
+        const points = maxRank - vote.rank + 1;
+        ideaPoints.set(vote.ideaId, (ideaPoints.get(vote.ideaId) || 0) + points);
       }
     });
 
-    // Sort each user's rankings
-    for (const userId in userRankings) {
-      userRankings[userId].sort((a, b) => a.rank - b.rank);
-    }
-
-    // Implement IRV logic
-    const activeIdeas = new Set(ideas.map(idea => idea.id));
-    const ideaNames: Record<string, string> = {};
-    ideas.forEach(idea => { ideaNames[idea.id] = idea.title; });
-
-    let winners: Idea[] = [];
-    let round = 1;
-
-    while (activeIdeas.size > 0) {
-      const roundVotes: Record<string, number> = {};
-
-      // Count first-choice votes for active ideas
-      Object.values(userRankings).forEach(rankings => {
-        const topChoice = rankings.find(r => activeIdeas.has(r.ideaId));
-        if (topChoice) {
-          roundVotes[topChoice.ideaId] = (roundVotes[topChoice.ideaId] || 0) + 1;
-        }
-      });
-
-      // Check for majority
-      const totalVotes = Object.values(roundVotes).reduce((sum, count) => sum + count, 0);
-      const sorted = [...activeIdeas].map(ideaId => ({
-        ideaId,
-        votes: roundVotes[ideaId] || 0,
-        percentage: totalVotes > 0 ? (roundVotes[ideaId] || 0) / totalVotes * 100 : 0
-      })).sort((a, b) => b.votes - a.votes);
-
-      // If a majority exists or we're down to one, return winner
-      if (sorted.length === 1 || sorted[0].percentage > 50) {
-        const winnerId = sorted[0].ideaId;
-        winners = ideas.filter(idea => idea.id === winnerId);
-        break;
-      }
-
-      // Eliminate the lowest ranked idea
-      const lowest = sorted[sorted.length - 1].ideaId;
-      activeIdeas.delete(lowest);
-      round++;
-    }
-
-    return winners;
-  }
+    return ideas.map(idea => ({
+      ...idea,
+      points: ideaPoints.get(idea.id) || 0
+    })).sort((a, b) => (b.points || 0) - (a.points || 0));
+  },
 
   /**
-   * 3. Borda Count
-   * Voters rank ideas, each rank gives points (1st = n-1 points, 2nd = n-2, etc.)
-   * The idea with the most points wins
+   * Condorcet Method - Finds an idea that beats all others in pairwise comparisons
    */
-  static bordaCount(ideas: Idea[], votes: Vote[]): Idea[] {
-    const ideaPoints: Record<string, number> = {};
+  condorcetVoting(ideas: PrismaIdea[], votes: NormalizedVote[]): VotingMethodResult | null {
+    // Group votes by user to analyze each voter's preferences
+    const votesByUser = votes.reduce((userMap, vote) => {
+      const userVotes = userMap.get(vote.userId) || [];
+      userVotes.push(vote);
+      userMap.set(vote.userId, userVotes);
+      return userMap;
+    }, new Map<string, NormalizedVote[]>());
 
-    ideas.forEach(idea => {
-      ideaPoints[idea.id] = 0;
-    });
-
-    // Group votes by user
-    const userVotes: Record<string, Vote[]> = {};
-    votes.forEach(vote => {
-      if (!userVotes[vote.userId]) {
-        userVotes[vote.userId] = [];
-      }
-      userVotes[vote.userId].push(vote);
-    });
-
-    // Calculate Borda points for each user's ranking
-    Object.values(userVotes).forEach(userVotes => {
-      // Sort by rank (1st = highest)
-      const sorted = userVotes.filter(v => v.rank !== undefined)
-                             .sort((a, b) => (a.rank || 0) - (b.rank || 0));
-
-      const numIdeas = sorted.length;
-      sorted.forEach((vote, index) => {
-        // Borda count: 1st place gets n-1 points, 2nd gets n-2, etc.
-        const points = numIdeas - index - 1;
-        ideaPoints[vote.ideaId] += points;
+    // Initialize pairwise comparison matrix
+    const pairwiseResults = new Map<string, Map<string, number>>();
+    ideas.forEach(idea1 => {
+      const innerMap = new Map<string, number>();
+      ideas.forEach(idea2 => {
+        if (idea1.id !== idea2.id) innerMap.set(idea2.id, 0);
       });
+      pairwiseResults.set(idea1.id, innerMap);
     });
 
-    // Sort ideas by total points
-    return [...ideas]
-      .map(idea => ({ ...idea, points: ideaPoints[idea.id] }))
-      .sort((a, b) => b.points - a.points);
-  }
-
-  /**
-   * 4. Condorcet Method
-   * Voters rank ideas, we compare all head-to-head matchups
-   * The idea that beats all others in pairwise comparisons wins
-   */
-  static condorcetVoting(ideas: Idea[], votes: Vote[]): Idea | null {
-    // Create a matrix to store pairwise comparisons
-    const pairwise: Record<string, Record<string, number>> = {};
-    const ideaIds = ideas.map(idea => idea.id);
-
-    // Initialize matrix
-    ideaIds.forEach(id1 => {
-      pairwise[id1] = {};
-      ideaIds.forEach(id2 => {
-        if (id1 !== id2) {
-          pairwise[id1][id2] = 0;
-        }
-      });
-    });
-
-    // Group votes by user
-    const userRankings: Record<string, { ideaId: string; rank: number }[]> = {};
-    votes.forEach(vote => {
-      if (!userRankings[vote.userId]) {
-        userRankings[vote.userId] = [];
-      }
-      if (vote.rank !== undefined) {
-        userRankings[vote.userId].push({ ideaId: vote.ideaId, rank: vote.rank });
-      }
-    });
-
-    // Sort each user's rankings
-    for (const userId in userRankings) {
-      userRankings[userId].sort((a, b) => a.rank - b.rank);
-    }
-
-    // Populate pairwise comparisons
-    Object.values(userRankings).forEach(ranking => {
-      for (let i = 0; i < ranking.length; i++) {
-        for (let j = i + 1; j < ranking.length; j++) {
-          const preferred = ranking[i].ideaId;
-          const other = ranking[j].ideaId;
-          pairwise[preferred][other] += 1;
+    // Count how many times each idea beats others in pairwise comparisons
+    votesByUser.forEach(userVotes => {
+      // Sort by rank to get preference order
+      const rankedVotes = [...userVotes].sort((a, b) => (a.rank || 0) - (b.rank || 0));
+      
+      // Compare each idea with every idea ranked below it
+      for (let i = 0; i < rankedVotes.length; i++) {
+        for (let j = i + 1; j < rankedVotes.length; j++) {
+          const preferredId = rankedVotes[i].ideaId;
+          const otherId = rankedVotes[j].ideaId;
+          pairwiseResults.get(preferredId)?.set(otherId, 
+            (pairwiseResults.get(preferredId)?.get(otherId) || 0) + 1);
         }
       }
     });
 
-    // Check for Condorcet winner (beats all others in pairwise comparisons)
-    for (const candidate of ideaIds) {
-      let isCondorcetWinner = true;
-      for (const opponent of ideaIds) {
-        if (candidate !== opponent && pairwise[candidate][opponent] <= pairwise[opponent][candidate]) {
-          isCondorcetWinner = false;
-          break;
-        }
-      }
+    // Check for a Condorcet winner (beats all others in pairwise comparisons)
+    for (const [ideaId, comparisons] of pairwiseResults) {
+      const isCondorcetWinner = Array.from(comparisons.values()).every(count => count > 0);
       if (isCondorcetWinner) {
-        return ideas.find(idea => idea.id === candidate) || null;
+        const winner = ideas.find(i => i.id === ideaId);
+        return winner ? { ...winner, score: 1 } : null;
       }
     }
 
-    return null; // No Condorcet winner
+    return null; // No Condorcet winner found
+  }
+};
+
+type CreateSessionArgs = ResolverArgs<CreateSessionInput>;
+type SubmitVoteArgs = ResolverArgs<SubmitVoteInput>;
+type GetResultsArgs = ResolverArgs<GetResultsInput>;
+type GetAllResultsArgs = ResolverArgs<{ sessionId: string }>;
+
+// Helper function to check if object is record with string keys (kept from your code)
+function isJsonObject(obj: unknown): obj is Record<string, unknown> {
+  return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
+}
+
+async function verifyUser(userId: string): Promise<UserVerification> {
+  try {
+    const response = await fetch(process.env.BACKEND2_URL + '/graphql', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.SERVICE_TOKEN}`
+      },
+      body: JSON.stringify({
+        query: `
+          query VerifyUser($userId: ID!) {
+            verifyUser(userId: $userId) {
+              exists
+              email
+              name
+            }
+          }
+        `,
+        variables: { userId }
+      })
+    });
+
+    const { data, errors } = await response.json();
+    if (errors) throw new Error(errors[0].message);
+    return data.verifyUser;
+  } catch (error) {
+    console.error('User verification failed:', error);
+    return { exists: false };
   }
 }
+
+async function withErrorHandling<T, U>(
+  fn: (args: T) => Promise<U>,
+  args: T
+): Promise<U> {
+  try {
+    return await fn(args);
+  } catch (error) {
+    console.error('Resolver error:', error);
+    throw new Error(
+      error instanceof Error ? error.message : 'Internal server error'
+    );
+  }
+}
+
+const createSessionHandler = async ({
+  args: { title, ideas, maxPriorities = 15 }
+}: CreateSessionArgs) => {
+  return await prisma.votingSession.create({
+    data: {
+      title,
+      maxPriorities,
+      ideas: {
+        create: ideas.map((title: string) => ({
+          title,
+          description: ""
+        })),
+      },
+    },
+    include: { ideas: true }
+  });
+};
+
+const submitVoteHandler = async ({
+  args: { sessionId, voterId, scores, votes, method = 'SCORE' }
+}: SubmitVoteArgs) => {
+  const userInfo = await verifyUser(voterId);
+  if (!userInfo.exists) throw new Error('Invalid user credentials');
+
+  const voteData: VoteData[] = votes || (scores ? Object.entries(scores).map(([ideaId, score]) => ({
+    ideaId, score, rank: undefined
+  })) : []);
+
+  // Validate based on method
+  if (method === 'SCORE') {
+    voteData.forEach(vote => {
+      if (vote.score === undefined) {
+        throw new Error('Score voting requires score for each vote');
+      }
+    });
+  } else {
+    voteData.forEach(vote => {
+      if (vote.rank === undefined) {
+        throw new Error('Ranked methods require rank for each vote');
+      }
+    });
+  }
+
+  // Store votes in database (updated format)
+  await prisma.vote.createMany({
+    data: voteData.map(vote => ({
+      sessionId,
+      voterId,
+      userEmail: userInfo.email,
+      userName: userInfo.name,
+      ideaId: vote.ideaId,
+      score: vote.score,
+      rank: vote.rank,
+      method,
+    })),
+  });
+
+  return true;
+};
+
+const getResultsHandler = async ({
+  args: { sessionId, method = 'SCORE' }
+}: GetResultsArgs): Promise<VotingResult> => {
+  const [votes, ideas] = await Promise.all([
+    prisma.vote.findMany({ 
+      where: { sessionId },
+      select: {
+        userId: true,
+        ideaId: true,
+        score: true,
+        rank: true,
+        method: true
+      }
+    }),
+    prisma.idea.findMany({ 
+      where: { sessionId },
+      select: { 
+        id: true, 
+        title: true,
+        description: true,
+        sessionId: true,
+        createdAt: true
+      }
+    }),
+  ]);
+
+  // Convert votes to common format
+  const normalizedVotes = votes.map(vote => ({
+    userId: vote.userId ?? 'unknown-user',
+    ideaId: vote.ideaId ?? '', // Provide fallback for ideaId
+    score: vote.score ?? undefined,
+    rank: vote.rank ?? undefined
+  }));
+  
+  // Transform ideas to match expected type
+  const votingIdeas = ideas.map(idea => ({
+    ...idea,
+    description: idea.description || ""
+  }));
+
+  // Apply the selected voting method
+  let results;
+  switch (method) {
+    case 'SCORE':
+      results = VotingMethods.scoreVoting(votingIdeas, normalizedVotes);
+      break;
+    case 'RANKED_CHOICE':
+      results = VotingMethods.rankedChoiceVoting(votingIdeas, normalizedVotes);
+      break;
+    case 'BORDA_COUNT':
+      results = VotingMethods.bordaCount(votingIdeas, normalizedVotes);
+      break;
+    case 'CONDORCET':
+      const condorcetWinner = VotingMethods.condorcetVoting(votingIdeas, normalizedVotes);
+      results = condorcetWinner ? [condorcetWinner] : ideas.map(i => ({ ...i, score: 0, points: 0,
+      percentage: 0 }));
+      break;
+    default:
+      throw new Error('Invalid voting method');
+  }
+
+  // Format results for backward compatibility
+  return {
+    method,
+    results: results.map((result, index) => ({
+      ideaId: result.id,
+      title: result.title,
+      score: 'score' in result ? Number(result.score) : undefined,
+      points: 'points' in result ? Number(result.points) : undefined,
+      percentage: 'percentage' in result ? Number(result.percentage) : undefined,
+      rank: index + 1
+    })),
+    winners: results.filter(r => 'rank' in r && r.rank === 1)
+  };
+};
+
+const getAllResultsHandler = async ({
+  args: { sessionId }
+}: GetAllResultsArgs): Promise<VotingResult[]> => {
+  const methods = ['SCORE', 'RANKED_CHOICE', 'BORDA_COUNT', 'CONDORCET'] as const;
+  
+  return Promise.all(
+    methods.map(method => 
+      getResultsHandler({ _: null, args: { sessionId, method }, context: null, info: null })
+    )
+  );
+};
+
+const resolvers = {
+  JSON: {
+    serialize: (value: unknown) => value,
+    parseValue: (value: unknown) => value,
+  },
+  Mutation: {
+    createSession: async (_: unknown, args: CreateSessionInput, context: any, info: any) => 
+      withErrorHandling<CreateSessionArgs, ReturnType<typeof createSessionHandler>>(
+        createSessionHandler,
+        { _, args, context, info }
+      ),
+
+    submitVote: async (_: unknown, args: SubmitVoteInput, context: any, info: any) =>
+      withErrorHandling<SubmitVoteArgs, boolean>(
+        submitVoteHandler,
+        { _, args, context, info }
+      ),
+  },
+  Query: {
+    getResults: async (_: unknown, args: GetResultsInput, context: any, info: any) =>
+      withErrorHandling<GetResultsArgs, VotingResult>(
+        getResultsHandler,
+        { _, args, context, info }
+      ),
+
+    getAllResults: async (_: unknown, args: { sessionId: string }, context: any, info: any) =>
+      withErrorHandling<GetAllResultsArgs, VotingResult[]>(
+        getAllResultsHandler,
+        { _, args, context, info }
+      )
+  }
+};
+
+export default resolvers;

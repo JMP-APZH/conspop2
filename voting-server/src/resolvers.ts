@@ -1,5 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { VotingMethods } from './lib/voting-methods';
+import type { VotingSession, Idea as PrismaIdea } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -8,6 +9,27 @@ interface CreateSessionInput {
   title: string;
   ideas: string[];
   maxPriorities?: number;
+}
+
+interface VotingMethodResult extends PrismaIdea {
+  score?: number;
+  points?: number;
+  percentage?: number;
+  rank?: number;
+}
+
+interface Vote {
+  userId: string;
+  ideaId: string;
+  score?: number;
+  rank?: number;
+}
+
+interface NormalizedVote {
+  userId: string;
+  ideaId: string;
+  score?: number;
+  rank?: number;
 }
 
 interface SubmitVoteInput {
@@ -43,6 +65,31 @@ interface VoteData {
   score?: number;
   rank?: number;
 }
+
+interface VotingResult {
+  method: string;
+  results: IdeaResult[];
+  winners: PrismaIdea[];
+}
+
+interface ResolverArgs<T> {
+  _: unknown;
+  args: T;
+  context: any;
+  info: any;
+}
+
+interface Idea extends PrismaIdea {
+  id: string;
+  title: string;
+  // description: string; // Non-nullable
+  description: string | null; // Make this match Prisma's type
+}
+
+type CreateSessionArgs = ResolverArgs<CreateSessionInput>;
+type SubmitVoteArgs = ResolverArgs<SubmitVoteInput>;
+type GetResultsArgs = ResolverArgs<GetResultsInput>;
+type GetAllResultsArgs = ResolverArgs<{ sessionId: string }>;
 
 // Helper function to check if object is record with string keys (kept from your code)
 function isJsonObject(obj: unknown): obj is Record<string, unknown> {
@@ -80,12 +127,12 @@ async function verifyUser(userId: string): Promise<UserVerification> {
   }
 }
 
-async function withErrorHandling<T>(
-  fn: (...args: any[]) => Promise<T>,
-  ...args: any[]
-): Promise<T> {
+async function withErrorHandling<T, U>(
+  fn: (args: T) => Promise<U>,
+  args: T
+): Promise<U> {
   try {
-    return await fn(...args);
+    return await fn(args);
   } catch (error) {
     console.error('Resolver error:', error);
     throw new Error(
@@ -94,139 +141,190 @@ async function withErrorHandling<T>(
   }
 }
 
+const createSessionHandler = async ({
+  args: { title, ideas, maxPriorities = 15 }
+}: CreateSessionArgs): Promise<Prisma.VotingSessionGetPayload<{ include: { ideas: true } }>> => {
+  return await prisma.votingSession.create({
+    data: {
+      title,
+      maxPriorities,
+      ideas: {
+        create: ideas.map((title: string) => ({
+          title,
+          description: ""
+        })),
+      },
+    },
+    include: { ideas: true }
+  });
+};
+
+const submitVoteHandler = async ({
+  args: { sessionId, voterId, scores, votes, method = 'SCORE' }
+}: SubmitVoteArgs) => {
+  const userInfo = await verifyUser(voterId);
+  if (!userInfo.exists) throw new Error('Invalid user credentials');
+
+  const voteData: VoteData[] = votes || (scores ? Object.entries(scores).map(([ideaId, score]) => ({
+    ideaId, score, rank: undefined
+  })) : []);
+
+  // Validate based on method
+  if (method === 'SCORE') {
+    voteData.forEach(vote => {
+      if (vote.score === undefined) {
+        throw new Error('Score voting requires score for each vote');
+      }
+    });
+  } else {
+    voteData.forEach(vote => {
+      if (vote.rank === undefined) {
+        throw new Error('Ranked methods require rank for each vote');
+      }
+    });
+  }
+
+  // Store votes in database (updated format)
+  await prisma.vote.createMany({
+    data: voteData.map(vote => ({
+      sessionId,
+      voterId,
+      userEmail: userInfo.email,
+      userName: userInfo.name,
+      ideaId: vote.ideaId,
+      score: vote.score,
+      rank: vote.rank,
+      method,
+    })),
+  });
+
+  return true;
+};
+
+const getResultsHandler = async ({
+  args: { sessionId, method = 'SCORE' }
+}: GetResultsArgs): Promise<VotingResult> => {
+  const [votes, ideas] = await Promise.all([
+    prisma.vote.findMany({ 
+      where: { sessionId },
+      select: {
+        userId: true,
+        ideaId: true,
+        score: true,
+        rank: true,
+        method: true
+      }
+    }),
+    prisma.idea.findMany({ 
+      where: { sessionId },
+      select: { 
+        id: true, 
+        title: true,
+        description: true,
+        sessionId: true,
+        createdAt: true
+      }
+    }),
+  ]);
+
+  // Convert votes to common format
+  const normalizedVotes = votes.map(vote => ({
+    userId: vote.userId ?? 'unknown-user',
+    ideaId: vote.ideaId ?? '', // Provide fallback for ideaId
+    score: vote.score ?? undefined,
+    rank: vote.rank ?? undefined
+  }));
+  
+  // // Transform ideas to match expected type
+  // const votingIdeas = ideas.map(idea => ({
+  //   ...idea,
+  //   id: idea.id,
+  //   title: idea.title,
+  //   description: idea.description || ""
+  // }));
+
+
+  // No transformation needed since we have all fields
+  const votingIdeas = ideas;
+
+  // Apply the selected voting method
+  let results: VotingMethodResult[];
+  switch (method) {
+    case 'SCORE':
+      results = VotingMethods.scoreVoting(votingIdeas, normalizedVotes);
+      break;
+    case 'RANKED_CHOICE':
+      results = VotingMethods.rankedChoiceVoting(votingIdeas, normalizedVotes);
+      break;
+    case 'BORDA_COUNT':
+      results = VotingMethods.bordaCount(votingIdeas, normalizedVotes);
+      break;
+    case 'CONDORCET':
+      const condorcetWinner = VotingMethods.condorcetVoting(votingIdeas, normalizedVotes);
+      results = condorcetWinner ? [condorcetWinner] : ideas.map(i => ({ ...i, score: 0 }));
+      break;
+    default:
+      throw new Error('Invalid voting method');
+  }
+
+  // Format results for backward compatibility
+  return {
+    method,
+    results: results.map((result, index) => ({
+      ideaId: result.id,
+      title: result.title,
+      score: result.score,
+      points: result.points,
+      percentage: result.percentage,
+      rank: result.rank ?? index + 1
+    })),
+    winners: results.filter((r): r is PrismaIdea & { rank: number } => 'rank' in r && r.rank === 1)
+  };
+};
+
+const getAllResultsHandler = async ({
+  args: { sessionId }
+}: GetAllResultsArgs): Promise<VotingResult[]> => {
+  const methods = ['SCORE', 'RANKED_CHOICE', 'BORDA_COUNT', 'CONDORCET'] as const;
+  
+  return Promise.all(
+    methods.map(method => 
+      getResultsHandler({ _: null, args: { sessionId, method }, context: null, info: null })
+    )
+  );
+};
+
 const resolvers = {
   JSON: {
     serialize: (value: unknown) => value,
     parseValue: (value: unknown) => value,
   },
   Mutation: {
-    createSession: async (...args) => withErrorHandling(async () => {
-      const [_, { title, ideas, maxPriorities = 15 }] = args;
-      return prisma.votingSession.create({
-        data: {
-          title,
-          maxPriorities,
-          ideas: {
-            create: ideas.map((title: string) => ({ title })),
-          },
-        },
-        include: { ideas: true }
-      });
-    }, ...args),
+    createSession: async (_: unknown, args: CreateSessionInput, context: any, info: any) => 
+      withErrorHandling<CreateSessionArgs, ReturnType<typeof createSessionHandler>>(
+        createSessionHandler,
+        { _, args, context, info }
+      ),
 
-    submitVote: async (...args) => withErrorHandling(async () => {
-      const [_, { sessionId, voterId, scores, votes, method = 'SCORE' }] = args;
-      const userInfo = await verifyUser(voterId);
-      if (!userInfo.exists) throw new Error('Invalid user credentials');
-
-      const voteData: VoteData[] = votes || (scores ? Object.entries(scores).map(([ideaId, score]) => ({
-        ideaId, score, rank: undefined
-      })) : [];
-
-      // Validate based on method
-      if (method === 'SCORE') {
-        voteData.forEach(vote => {
-          if (vote.score === undefined) {
-            throw new Error('Score voting requires score for each vote');
-          }
-        });
-      } else {
-        voteData.forEach(vote => {
-          if (vote.rank === undefined) {
-            throw new Error('Ranked methods require rank for each vote');
-          }
-        });
-      }
-
-      // Store votes in database (updated format)
-      await prisma.vote.createMany({
-        data: voteData.map(vote => ({
-          sessionId,
-          userEmail: userInfo.email, // Cache user info
-          userName: userInfo.name,
-          ideaId: vote.ideaId,
-          score: vote.score,
-          rank: vote.rank,
-          method,
-        })),
-      });
-
-      return true;
-    }, ...args),
+    submitVote: async (_: unknown, args: SubmitVoteInput, context: any, info: any) =>
+      withErrorHandling<SubmitVoteArgs, boolean>(
+        submitVoteHandler,
+        { _, args, context, info }
+      ),
   },
-
   Query: {
-    getResults: async (...args) => withErrorHandling(async () => { 
-      const [_, { sessionId, method = 'SCORE' }] = args;
+    getResults: async (_: unknown, args: GetResultsInput, context: any, info: any) =>
+      withErrorHandling<GetResultsArgs, VotingResult>(
+        getResultsHandler,
+        { _, args, context, info }
+      ),
 
-      const [votes, ideas] = await Promise.all([
-        prisma.vote.findMany({ 
-          where: { sessionId },
-          select: {
-            ideaId: true,
-            score: true,
-            rank: true,
-            method: true
-          }
-        }),
-        prisma.idea.findMany({ 
-          where: { sessionId },
-          select: { id: true, title: true }
-        }),
-      ]);
-
-      // Convert votes to common format
-      const normalizedVotes = votes.map(vote => ({
-        ideaId: vote.ideaId,
-        score: vote.score ?? undefined,
-        rank: vote.rank ?? undefined
-      }));
-
-      // Apply the selected voting method
-      let results;
-      switch (method) {
-        case 'SCORE':
-          results = VotingMethods.scoreVoting(ideas, normalizedVotes);
-          break;
-        case 'RANKED_CHOICE':
-          results = VotingMethods.rankedChoiceVoting(ideas, normalizedVotes);
-          break;
-        case 'BORDA_COUNT':
-          results = VotingMethods.bordaCount(ideas, normalizedVotes);
-          break;
-        case 'CONDORCET':
-          const condorcetWinner = VotingMethods.condorcetVoting(ideas, normalizedVotes);
-          results = condorcetWinner ? [condorcetWinner] : ideas.map(i => ({ ...i, score: 0 }));
-          break;
-        default:
-          throw new Error('Invalid voting method');
-      }
-
-      // Format results for backward compatibility
-      return results.map((result, index) => ({
-        ideaId: result.id,
-        title: result.title,
-        score: 'score' in result ? result.score : undefined,
-        points: 'points' in result ? result.points : undefined,
-        percentage: 'percentage' in result ? result.percentage : undefined,
-        rank: index + 1
-      }));
-    }, ...args),
-
-    // New query to get all methods' results
-    getAllResults: async (...args) => withErrorHandling(async () => {
-      const [_, { sessionId }] = args;
-      const methods = ['SCORE', 'RANKED_CHOICE', 'BORDA_COUNT', 'CONDORCET'] 
-    as const;
-      
-      return Promise.all(
-        methods.map(method => 
-          resolvers.Query.getResults(_, { sessionId, method })
-            .then(results => ({ method, results }))
-        )
-      );
-    }, ...args)
-  },
+    getAllResults: async (_: unknown, args: { sessionId: string }, context: any, info: any) =>
+      withErrorHandling<GetAllResultsArgs, VotingResult[]>(
+        getAllResultsHandler,
+        { _, args, context, info }
+      )
+  }
 };
 
 export default resolvers;
