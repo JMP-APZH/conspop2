@@ -89,16 +89,28 @@ export class User {
   }
 }
 
+@ObjectType()
 export class UserVerification {
   @Field()
-  exists: boolean;
+  exists: boolean = false;
 
   @Field({ nullable: true })
   email?: string;
 
   @Field({ nullable: true })
   name?: string;
+
+// Optional: Add constructor for explicit initialization
+  constructor(init?: Partial<UserVerification>) {
+    Object.assign(this, {
+      exists: false,
+      ...init
+    });
+  }
+
 }
+
+
 
 @ObjectType()
 export class AuthPayload {

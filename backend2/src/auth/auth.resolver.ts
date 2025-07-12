@@ -67,8 +67,10 @@ async weeklyActiveUsers(@Ctx() ctx: Context): Promise<number> {
     @Arg("userId") userId: string,
     @Ctx() ctx: Context
   ) {
-    // Only allow admins or the user themselves to verify
-    if (ctx.userId !== userId && !ctx.isAdmin) {
+    // Allow if:
+    // 1. User is requesting their own info (ctx.userId === userId), OR
+    // 2. User is an ADMIN (ctx.userRole === 'ADMIN')
+    if (ctx.userId !== userId && ctx.userRole !== 'ADMIN') {
       throw new Error("Unauthorized verification request");
     }
 
