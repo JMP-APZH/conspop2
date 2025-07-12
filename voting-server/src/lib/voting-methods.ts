@@ -263,10 +263,16 @@ async function withErrorHandling<T, U>(
   }
 }
 
+// 1. First, define a type for the return value
+type SessionWithIdeas = Prisma.VotingSessionGetPayload<{
+  include: { ideas: true }
+}>;
+
+// 2. Update the handler to use this type
 const createSessionHandler = async ({
   args: { title, ideas, maxPriorities = 15 }
-}: CreateSessionArgs) => {
-  return await prisma.votingSession.create({
+}: CreateSessionArgs): Promise<SessionWithIdeas> => {
+  return prisma.votingSession.create({
     data: {
       title,
       maxPriorities,
@@ -416,9 +422,11 @@ const resolvers = {
     serialize: (value: unknown) => value,
     parseValue: (value: unknown) => value,
   },
+
+  // 3. Update the resolver to use the concrete type
   Mutation: {
     createSession: async (_: unknown, args: CreateSessionInput, context: any, info: any) => 
-      withErrorHandling<CreateSessionArgs, ReturnType<typeof createSessionHandler>>(
+      withErrorHandling<CreateSessionArgs, SessionWithIdeas>(
         createSessionHandler,
         { _, args, context, info }
       ),

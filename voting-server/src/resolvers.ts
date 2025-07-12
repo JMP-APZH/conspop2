@@ -141,10 +141,11 @@ async function withErrorHandling<T, U>(
   }
 }
 
+// 1. First, simplify the handler's return type
 const createSessionHandler = async ({
   args: { title, ideas, maxPriorities = 15 }
-}: CreateSessionArgs): Promise<Prisma.VotingSessionGetPayload<{ include: { ideas: true } }>> => {
-  return await prisma.votingSession.create({
+}: CreateSessionArgs) => {
+  return prisma.votingSession.create({
     data: {
       title,
       maxPriorities,
@@ -294,14 +295,17 @@ const getAllResultsHandler = async ({
   );
 };
 
+
 const resolvers = {
   JSON: {
     serialize: (value: unknown) => value,
     parseValue: (value: unknown) => value,
   },
+
+  // 2. Then update the resolver to not expect a nested Promise
   Mutation: {
     createSession: async (_: unknown, args: CreateSessionInput, context: any, info: any) => 
-      withErrorHandling<CreateSessionArgs, ReturnType<typeof createSessionHandler>>(
+      withErrorHandling(
         createSessionHandler,
         { _, args, context, info }
       ),
