@@ -32,11 +32,11 @@ export class RegisterInput {
   @Field()
   isDiaspora!: boolean;
 
-  @Field()
-  cityOfOrigin!: string;
+  @Field(() => CityInput)  // ✅ Changed to CityInput
+  cityOfOrigin!: CityInput;
 
-  @Field()
-  currentCity!: string;
+  @Field(() => CityInput)  // ✅ Changed to CityInput
+  currentCity!: CityInput;
 
   @Field(() => PrismaRole, { nullable: true }) // Explicitly specify the enum type; Make role optional
   role?: PrismaRole;

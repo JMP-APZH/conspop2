@@ -7,8 +7,19 @@ const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET!;
 
 export const AuthService = {
-  async register(input: RegisterInput): Promise<PrismaUser> {
+  async register(input: RegisterInput): Promise<PrismaUser & { cityOfOrigin: any; currentCity: any }> {
+    
+    // Validate cities exist
+    const [originCity, currentCity] = await Promise.all([
+      prisma.martiniqueCity.findUnique({ where: { id: input.cityOfOrigin.id } }),
+      prisma.martiniqueCity.findUnique({ where: { id: input.currentCity.id } })
+    ]);
+
+    if (!originCity) throw new Error(`City of origin with ID ${input.cityOfOrigin.id} not found`);
+    if (!currentCity) throw new Error(`Current city with ID ${input.currentCity.id} not found`);
+
     const hashedPassword = await bcrypt.hash(input.password, 10);
+
     return prisma.user.create({
       data: {
         email: input.email,
@@ -16,15 +27,26 @@ export const AuthService = {
         firstName: input.firstName,
         lastName: input.lastName,
         nickname: input.nickname,
-        cityOfOrigin: input.cityOfOrigin,
-        currentCity: input.currentCity,
+        isDiaspora: input.isDiaspora,
+        cityOfOriginId: input.cityOfOrigin.id,
+        currentCityId: input.currentCity.id,
         role: input.role || PrismaRole.USER // Instead of just Role.USER
+      },
+      include: {
+        cityOfOrigin: true,
+        currentCity: true
       }
     });
   },
 
-  async login(email: string, password: string): Promise<PrismaUser> {
-    const user = await prisma.user.findUnique({ where: { email } });
+  async login(email: string, password: string): Promise<PrismaUser & { cityOfOrigin: any; currentCity: any }> {
+    const user = await prisma.user.findUnique({ 
+      where: { email },
+      include: {
+        cityOfOrigin: true,
+        currentCity: true
+      }
+     });
     if (!user) throw new Error('User not found');
     
     const valid = await bcrypt.compare(password, user.password);
@@ -36,8 +58,30 @@ export const AuthService = {
     // Update last login time
     return prisma.user.update({
     where: { id: user.id },
-    data: { lastLoginAt: new Date() }
+    data: { lastLoginAt: new Date() },
+      include: {
+        cityOfOrigin: true,
+        currentCity: true
+      }
   });
+  },
+
+  // City-related methods
+  async getAllCities(): Promise<any[]> {
+    return prisma.martiniqueCity.findMany({
+      orderBy: { name: 'asc' }
+    });
+  },
+
+  async getCityById(id: string): Promise<any | null> {
+    return prisma.martiniqueCity.findUnique({ where: { id } });
+  },
+
+  async getCitiesByAgglomeration(agglomeration: string): Promise<any[]> {
+    return prisma.martiniqueCity.findMany({
+      where: { agglomeration: agglomeration as any },
+      orderBy: { name: 'asc' }
+    });
   },
 
   generateToken(user: { id: string; role: PrismaRole }): string {
@@ -48,8 +92,14 @@ export const AuthService = {
     );
   },
 
-  async getUserById(id: string): Promise<PrismaUser | null> {
-    return prisma.user.findUnique({ where: { id } });
+  async getUserById(id: string): Promise<(PrismaUser & { cityOfOrigin: any; currentCity: any }) | null> {
+    return prisma.user.findUnique({ 
+      where: { id },
+      include: {
+        cityOfOrigin: true,
+        currentCity: true
+      }
+     });
   },
 
   async getTotalUsersCount(): Promise<number> {
