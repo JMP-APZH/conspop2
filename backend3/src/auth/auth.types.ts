@@ -1,10 +1,15 @@
 import { ObjectType, Field, InputType, registerEnumType } from 'type-graphql';
-import { Role as PrismaRole, User as PrismaUser } from '@prisma/client';
+import { Role as PrismaRole, User as PrismaUser, CityAgglomeration, MartiniqueCity as PrismaMartiniqueCity } from '@prisma/client';
 
 // Register the Prisma enum with TypeGraphQL
 registerEnumType(PrismaRole, {
   name: 'Role', // This name must match your GraphQL schema
   description: 'User roles',
+});
+
+registerEnumType(CityAgglomeration, {
+  name: 'CityAgglomeration',
+  description: 'City agglomeration types',
 });
 
 @InputType()
@@ -25,6 +30,9 @@ export class RegisterInput {
   nickname?: string;
 
   @Field()
+  isDiaspora!: boolean;
+
+  @Field()
   cityOfOrigin!: string;
 
   @Field()
@@ -32,6 +40,15 @@ export class RegisterInput {
 
   @Field(() => PrismaRole, { nullable: true }) // Explicitly specify the enum type; Make role optional
   role?: PrismaRole;
+}
+
+@InputType()
+export class CityInput {
+  @Field()
+  id!: string;
+
+  @Field({ nullable: true })
+  name?: string;
 }
 
 @InputType()
@@ -61,10 +78,13 @@ export class User {
   nickname?: string;
 
   @Field()
-  cityOfOrigin: string;
+  isDiaspora: boolean;
 
-  @Field()
-  currentCity: string;
+  @Field(() => MartiniqueCity)
+  cityOfOrigin: MartiniqueCity;
+
+  @Field(() => MartiniqueCity)
+  currentCity: MartiniqueCity;
 
   @Field(() => PrismaRole) // Explicitly specify the enum type
   role!: PrismaRole;
@@ -75,14 +95,15 @@ export class User {
   @Field()
   updatedAt: Date;
 
-  constructor(user: PrismaUser) {
+  constructor(user: PrismaUser & { cityOfOrigin: PrismaMartiniqueCity; currentCity: PrismaMartiniqueCity }) {
     this.id = user.id;
     this.email = user.email;
     this.firstName = user.firstName;
     this.lastName = user.lastName;
     this.nickname = user.nickname || undefined;
-    this.cityOfOrigin = user.cityOfOrigin;
-    this.currentCity = user.currentCity;
+    this.isDiaspora = user.isDiaspora;
+    this.cityOfOrigin = new MartiniqueCity(user.cityOfOrigin);
+    this.currentCity = new MartiniqueCity(user.currentCity);
     this.role = user.role;
     this.createdAt = user.createdAt;
     this.updatedAt = user.updatedAt;
@@ -131,4 +152,14 @@ export class UserStats {
   
   @Field()
   weeklyActiveUsers!: number;
+}
+
+// Add queries for cities
+@ObjectType()
+export class CitiesResponse {
+  @Field(() => [MartiniqueCity])
+  cities!: MartiniqueCity[];
+
+  @Field()
+  totalCount!: number;
 }
