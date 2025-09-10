@@ -1,6 +1,6 @@
 import { Arg, Mutation, Query, Resolver, Ctx, UseMiddleware, Int } from 'type-graphql';
 import { AuthService } from './auth.service';
-import { AuthPayload, RegisterInput, LoginInput, User, UserVerification } from './auth.types';
+import { AuthPayload, RegisterInput, LoginInput, User, UserVerification, CitiesResponse, MartiniqueCity } from './auth.types';
 import { Context } from '../context';
 import { isAdmin, isAuth } from './auth.middleware';
 
@@ -35,6 +35,23 @@ export class AuthResolver {
     if (!ctx.userId) return null;
     const prismaUser = await AuthService.getUserById(ctx.userId);
     return prismaUser ? new User(prismaUser) : null;
+  }
+
+  @Query(() => CitiesResponse)
+  async cities(
+    @Arg('agglomeration', { nullable: true }) agglomeration?: string
+  ): Promise<CitiesResponse> {
+    let cities;
+    if (agglomeration) {
+      cities = await AuthService.getCitiesByAgglomeration(agglomeration);
+    } else {
+      cities = await AuthService.getAllCities();
+    }
+    
+    return {
+      cities: cities.map(city => new MartiniqueCity(city)),
+      totalCount: cities.length
+    };
   }
 
   @Query(() => [User])

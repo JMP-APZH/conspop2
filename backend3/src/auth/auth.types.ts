@@ -12,6 +12,43 @@ registerEnumType(CityAgglomeration, {
   description: 'City agglomeration types',
 });
 
+// MARTINIQUE CITY CLASS DEFINITION
+@ObjectType()
+export class MartiniqueCity {
+  @Field()
+  id: string;
+
+  @Field()
+  name: string;
+
+  @Field()
+  postalCode: string;
+
+  @Field(() => CityAgglomeration)
+  agglomeration: CityAgglomeration;
+
+  @Field()
+  population: number;
+
+  constructor(city: any) {
+    this.id = city.id;
+    this.name = city.name;
+    this.postalCode = city.postalCode;
+    this.agglomeration = city.agglomeration;
+    this.population = city.population;
+  }
+}
+
+@InputType()
+export class CityInput {
+  @Field()
+  id!: string;
+
+  @Field({ nullable: true })
+  name?: string;
+}
+
+
 @InputType()
 export class RegisterInput {
   @Field()
@@ -40,15 +77,6 @@ export class RegisterInput {
 
   @Field(() => PrismaRole, { nullable: true }) // Explicitly specify the enum type; Make role optional
   role?: PrismaRole;
-}
-
-@InputType()
-export class CityInput {
-  @Field()
-  id!: string;
-
-  @Field({ nullable: true })
-  name?: string;
 }
 
 @InputType()
