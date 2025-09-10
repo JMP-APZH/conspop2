@@ -155,7 +155,63 @@ export default function RegisterPage() {
           )}
           
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* ... other fields remain the same until city fields ... */}
+            {/* Email Field */}
+            <div>
+              <label htmlFor="email" className="block text-yellow-300 mb-1">Mèl ou Pipiri</label>
+              <input
+                {...register("email")}
+                type="email"
+                className="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                disabled={loading}
+              />
+              {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>}
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <label htmlFor="password" className="block text-yellow-300 mb-1">Mod'pas'</label>
+              <input
+                {...register("password")}
+                type="password"
+                className="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                disabled={loading}
+              />
+              {errors.password && <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>}
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label htmlFor="confirmPassword" className="block text-yellow-300 mb-1">Anko an fwa mod'pas' la</label>
+              <input
+                {...register("confirmPassword")}
+                type="password"
+                className="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                disabled={loading}
+              />
+              {errors.confirmPassword && <p className="text-red-400 text-sm mt-1">{errors.confirmPassword.message}</p>}
+            </div>
+
+            {/* First Name */}
+            <div>
+              <label htmlFor="firstName" className="block text-yellow-300 mb-1">Non</label>
+              <input
+                {...register("firstName")}
+                className="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                disabled={loading}
+              />
+              {errors.firstName && <p className="text-red-400 text-sm mt-1">{errors.firstName.message}</p>}
+            </div>
+
+            {/* Last Name */}
+            <div>
+              <label htmlFor="lastName" className="block text-yellow-300 mb-1">Siyati</label>
+              <input
+                {...register("lastName")}
+                className="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                disabled={loading}
+              />
+              {errors.lastName && <p className="text-red-400 text-sm mt-1">{errors.lastName.message}</p>}
+            </div>
 
             {/* Diaspora Field */}
             <div>
