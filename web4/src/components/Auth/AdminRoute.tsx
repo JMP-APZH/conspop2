@@ -3,18 +3,11 @@ import { useQuery } from '@apollo/client';
 import { useRouter } from 'next/router';
 import { gql } from '@apollo/client';
 import { isAuthenticated } from '../../lib/auth';
-
-const ME_QUERY = gql`
-  query Me {
-    me {
-      role
-    }
-  }
-`;
+import { ME_ROLE_QUERY } from '../../lib/queries';
 
 export default function AdminRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { data, loading, error } = useQuery(ME_QUERY);
+  const { data, loading, error } = useQuery(ME_ROLE_QUERY);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;

@@ -114,6 +114,8 @@ export default function RegisterPage() {
   const selectedCurrentCity = citiesData?.cities?.cities?.find(city => city.id === selectedCurrentId);
 
   const onSubmit = async (data: RegisterFormData) => {
+    console.log('Form data being sent:', data);
+    console.log('Form data being sent:', JSON.stringify(data, null, 2));
     try {
       const { data: response } = await registerUser({
         variables: {
@@ -133,8 +135,14 @@ export default function RegisterPage() {
         setAuthToken(response.register.token);
         router.push('/profile');
       }
-    } catch (err) {
-      console.error('Registration error:', err);
+    } catch (err:any) {
+      console.error('Full error:', err);
+      console.error('GraphQL errors:', err.graphQLErrors);
+      console.error('Network error:', err.networkError);
+
+      if (err.networkError?.result?.errors) {
+        console.error('Server errors:', err.networkError.result.errors);
+      }
     }
   };
 

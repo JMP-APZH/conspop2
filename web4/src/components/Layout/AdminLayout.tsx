@@ -4,14 +4,7 @@ import Navbar from './Navbar';
 import { isAuthenticated } from '../../lib/auth';
 import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
-
-const ME_QUERY = gql`
-  query Me {
-    me {
-      role
-    }
-  }
-`;
+import { ME_ROLE_QUERY } from '../../lib/queries';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -19,7 +12,7 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
-  const { data, loading, error } = useQuery(ME_QUERY);
+  const { data, loading, error } = useQuery(ME_ROLE_QUERY);
 
   useEffect(() => {
     if (!isAuthenticated()) {

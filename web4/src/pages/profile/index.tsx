@@ -13,8 +13,14 @@ const ME_QUERY = gql`
       firstName
       lastName
       nickname
-      cityOfOrigin
-      currentCity
+      cityOfOrigin {  # ✅ Add subfields !
+        id
+        name
+      }
+      currentCity {   # ✅ Add subfields !
+        id
+        name
+      }
       role
       createdAt
     }
@@ -53,8 +59,8 @@ export default function ProfilePage() {
             <div>
               <h2 className="text-lg font-semibold">Adrès</h2>
               <div className="mt-2 space-y-2">
-                <p><span className="font-medium">Kote ou sòti:</span> {data?.me?.cityOfOrigin}</p>
-                <p><span className="font-medium">Kote ou retè:</span> {data?.me?.currentCity}</p>
+                <p><span className="font-medium">Kote ou sòti:</span> {data?.me?.cityOfOrigin?.name}</p>
+                <p><span className="font-medium">Kote ou retè:</span> {data?.me?.currentCity?.name}</p>
               </div>
             </div>
 
