@@ -11,6 +11,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "seed:cities": "ts-node src/scripts/seedCities.ts",
+    "seed:diaspora": "ts-node src/scripts/seedDiasporaLocations.ts",
+    "seed:all": "npm run seed:cities && npm run seed:diaspora",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

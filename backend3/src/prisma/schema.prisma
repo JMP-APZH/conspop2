@@ -32,6 +32,18 @@ model MartiniqueCity {
   @@map("martinique_cities")
 }
 
+model DiasporaLocation {
+  id          String    @id @default(uuid())
+  country     String    @unique
+  countryCode String
+  region      String?   // Optional: e.g., "North America", "Europe"
+  users       User[]    // Users living in this location
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("diaspora_locations")
+}
+
 model User {
   id              String           @id @default(uuid())
   email           String           @unique
@@ -44,6 +56,8 @@ model User {
   cityOfOrigin    MartiniqueCity   @relation("UserOriginCity", fields: [cityOfOriginId], references: [id], onDelete: NoAction)
   currentCityId   String
   currentCity     MartiniqueCity   @relation("UserCurrentCity", fields: [currentCityId], references: [id], onDelete: NoAction)
+  diasporaLocationId  String?       // Optional foreign key
+  diasporaLocation    DiasporaLocation? @relation(fields: [diasporaLocationId], references: [id], onDelete: SetNull)
   role            Role             @default(USER)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt

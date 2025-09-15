@@ -81,6 +81,13 @@ const schema = yup.object().shape({
   firstName: yup.string().required('First name is required'),
   lastName: yup.string().required('Last name is required'),
   isDiaspora: yup.boolean().required('Please specify if you are in diaspora'),
+  diasporaLocation: yup.object().when('isDiaspora', {
+    is: true,
+    then: yup.object().shape({
+      id: yup.string().required('Diaspora location is required when living abroad')
+    }).required('Diaspora location is required when living abroad'),
+    otherwise: yup.object().optional()
+  }),
   cityOfOrigin: yup.object().shape({
     id: yup.string().required('City of origin is required')
   }).required('City of origin is required'),
@@ -125,6 +132,9 @@ export default function RegisterPage() {
             firstName: data.firstName,
             lastName: data.lastName,
             isDiaspora: data.isDiaspora,
+            diasporaLocation: data.isDiaspora && data.diasporaLocation 
+            ? { id: data.diasporaLocation.id }
+            : undefined,
             cityOfOrigin: { id: data.cityOfOrigin.id },
             currentCity: { id: data.currentCity.id },
           }
@@ -229,11 +239,65 @@ export default function RegisterPage() {
                   {...register("isDiaspora")}
                   className="mr-2"
                   disabled={loading}
+                  onChange={(e) => {
+                    // Clear diaspora location when unchecked
+                    if (!e.target.checked) {
+                      setValue('diasporaLocation', { id: '' });
+                    }
+                  }}
                 />
                 Mwen ka rété an dyaspora (pa an Matinik)
               </label>
               {errors.isDiaspora && <p className="text-red-400 text-sm mt-1">{errors.isDiaspora.message}</p>}
             </div>
+
+            {/* Diaspora Location Dropdown - Only shown when isDiaspora is true */}
+            {watch('isDiaspora') && (
+              <div className="relative">
+                <label htmlFor="diasporaLocation" className="block text-yellow-300 mb-1">
+                  Kote ou ka rété an dyaspora *
+                </label>
+                <div
+                  className="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-300 cursor-pointer flex justify-between items-center"
+                  onClick={() => setShowDiasporaDropdown(!showDiasporaDropdown)}
+                >
+                  <span>
+                    {selectedDiasporaLocation 
+                      ? selectedDiasporaLocation.country 
+                      : "Chwazi kote ou ka rété an dyaspora"
+                    }
+                  </span>
+                  <FiChevronDown />
+                </div>
+                {showDiasporaDropdown && (
+                  <div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
+                    {diasporaLoading ? (
+                      <div className="p-2 text-white">Chajman...</div>
+                    ) : (
+                      diasporaData?.diasporaLocations?.map((location) => (
+                        <div
+                          key={location.id}
+                          className="p-2 hover:bg-gray-600 cursor-pointer text-white"
+                          onClick={() => {
+                            setValue('diasporaLocation', { id: location.id });
+                            setShowDiasporaDropdown(false);
+                          }}
+                        >
+                          <div className="font-medium">{location.country}</div>
+                          {location.region && (
+                            <div className="text-sm text-gray-300">{location.region}</div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+                <input type="hidden" {...register("diasporaLocation.id")} />
+                {errors.diasporaLocation?.id && (
+                  <p className="text-red-400 text-sm mt-1">{errors.diasporaLocation.id.message}</p>
+                )}
+              </div>
+            )}
 
             {/* City of Origin Dropdown */}
             <div className="relative">

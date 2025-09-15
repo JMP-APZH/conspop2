@@ -62,6 +62,11 @@ export default function ProfilePage() {
                 <p><span className="font-medium">Kote ou sòti:</span> {data?.me?.cityOfOrigin?.name}</p>
                 <p><span className="font-medium">Kote ou retè:</span> {data?.me?.currentCity?.name}</p>
               </div>
+              {data?.me?.isDiaspora ? (
+                <p><span className="font-medium">Kote ou retè an dyaspora:</span> {data?.me?.diasporaLocation?.country}</p>
+              ) : (
+                <p><span className="font-medium">Kote ou retè:</span> {data?.me?.currentCity?.name}</p>
+              )}
             </div>
 
             <div>
