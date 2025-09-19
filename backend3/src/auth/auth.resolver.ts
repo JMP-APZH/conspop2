@@ -1,6 +1,6 @@
 import { Arg, Mutation, Query, Resolver, Ctx, UseMiddleware, Int } from 'type-graphql';
 import { AuthService } from './auth.service';
-import { AuthPayload, RegisterInput, LoginInput, User, UserVerification, CitiesResponse, MartiniqueCity } from './auth.types';
+import { AuthPayload, RegisterInput, LoginInput, User, UserVerification, CitiesResponse, MartiniqueCity, DiasporaLocation } from './auth.types';
 import { Context } from '../context';
 import { isAdmin, isAuth } from './auth.middleware';
 
@@ -61,10 +61,10 @@ export class AuthResolver {
   }
 
   @Query(() => Int)
-@UseMiddleware(isAuth, isAdmin)
-async totalUsersCount(@Ctx() ctx: Context): Promise<number> {
-  return AuthService.getTotalUsersCount();
-}
+  @UseMiddleware(isAuth, isAdmin)
+  async totalUsersCount(@Ctx() ctx: Context): Promise<number> {
+    return AuthService.getTotalUsersCount();
+  }
 
 @Query(() => Int)
 @UseMiddleware(isAuth, isAdmin)
@@ -76,6 +76,12 @@ async dailyActiveUsers(@Ctx() ctx: Context): Promise<number> {
 @UseMiddleware(isAuth, isAdmin)
 async weeklyActiveUsers(@Ctx() ctx: Context): Promise<number> {
   return AuthService.getWeeklyActiveUsers();
+}
+
+@Query(() => [DiasporaLocation])
+async diasporaLocations(): Promise<DiasporaLocation[]> {
+  const locations = await AuthService.getAllDiasporaLocations();
+  return locations.map(location => new DiasporaLocation(location));
 }
 
 @Query(() => UserVerification)

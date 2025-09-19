@@ -84,6 +84,12 @@ export const AuthService = {
     });
   },
 
+  async getAllDiasporaLocations(): Promise<any[]> {
+    return prisma.diasporaLocation.findMany({
+      orderBy: { country: 'asc' }
+    });
+  },
+
   generateToken(user: { id: string; role: PrismaRole }): string {
     return jwt.sign(
       { userId: user.id, role: user.role },
@@ -131,5 +137,7 @@ export const AuthService = {
       }
     });
   }
+
+
 
 };

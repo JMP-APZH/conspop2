@@ -20,6 +20,28 @@ interface MartiniqueCity {
   population: number;
 }
 
+interface DiasporaLocation {
+  id: string;
+  country: string;
+  countryCode: string;
+  region?: string;
+}
+
+interface DiasporaLocationResponse {
+  diasporaLocations: DiasporaLocation[];
+}
+
+
+const GET_DIASPORA_LOCATIONS_QUERY = gql`
+  query GetDiasporaLocations {
+    diasporaLocations {
+      id
+      country
+      countryCode
+      region
+    }
+  }
+`;
 
 const GET_CITIES_QUERY = gql`
   query GetCities {
@@ -55,6 +77,10 @@ const REGISTER_MUTATION = gql`
             id
             name
           }
+          diasporaLocation {
+          id
+          country
+        }
       }
     }
   }
@@ -67,6 +93,8 @@ interface RegisterFormData {
   firstName: string;
   lastName: string;
   isDiaspora: boolean;
+  // diasporaLocation: { id: string } | null; 
+  diasporaLocationId: string;
   cityOfOrigin: { id: string };
   currentCity: { id: string };
 }
@@ -81,12 +109,10 @@ const schema = yup.object().shape({
   firstName: yup.string().required('First name is required'),
   lastName: yup.string().required('Last name is required'),
   isDiaspora: yup.boolean().required('Please specify if you are in diaspora'),
-  diasporaLocation: yup.object().when('isDiaspora', {
+  diasporaLocationId: yup.string().when('isDiaspora', {
     is: true,
-    then: yup.object().shape({
-      id: yup.string().required('Diaspora location is required when living abroad')
-    }).required('Diaspora location is required when living abroad'),
-    otherwise: yup.object().optional()
+    then: yup.string().required('Diaspora location is required when living abroad'),
+    otherwise: yup.string().nullable().optional()
   }),
   cityOfOrigin: yup.object().shape({
     id: yup.string().required('City of origin is required')
@@ -102,10 +128,12 @@ export default function RegisterPage() {
   const { data: citiesData, loading: citiesLoading } = useQuery<{
   cities: CitiesResponse;
 }>(GET_CITIES_QUERY);
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm({
+  const { data: diasporaData, loading: diasporaLoading, error: diasporaError } = useQuery<DiasporaLocationResponse>(GET_DIASPORA_LOCATIONS_QUERY);
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<RegisterFormData>({
     resolver: yupResolver(schema),
     defaultValues: {
       isDiaspora: false,
+      diasporaLocationId: '', 
       cityOfOrigin: { id: '' },
       currentCity: { id: '' }
     }
@@ -113,12 +141,18 @@ export default function RegisterPage() {
 
   const [showOriginDropdown, setShowOriginDropdown] = useState(false);
   const [showCurrentDropdown, setShowCurrentDropdown] = useState(false);
+  const [showDiasporaDropdown, setShowDiasporaDropdown] = useState(false);
 
   const selectedOriginId = watch('cityOfOrigin.id');
   const selectedCurrentId = watch('currentCity.id');
+  
+  const selectedDiasporaId = watch('diasporaLocationId');
 
   const selectedOriginCity = citiesData?.cities?.cities?.find(city => city.id === selectedOriginId);
   const selectedCurrentCity = citiesData?.cities?.cities?.find(city => city.id === selectedCurrentId);
+  const selectedDiasporaLocation = diasporaData?.diasporaLocations?.find(
+    (loc: any) => loc.id === selectedDiasporaId
+  );
 
   const onSubmit = async (data: RegisterFormData) => {
     console.log('Form data being sent:', data);
@@ -132,8 +166,8 @@ export default function RegisterPage() {
             firstName: data.firstName,
             lastName: data.lastName,
             isDiaspora: data.isDiaspora,
-            diasporaLocation: data.isDiaspora && data.diasporaLocation 
-            ? { id: data.diasporaLocation.id }
+            diasporaLocation: data.isDiaspora && data.diasporaLocationId 
+            ? { id: data.diasporaLocationId }
             : undefined,
             cityOfOrigin: { id: data.cityOfOrigin.id },
             currentCity: { id: data.currentCity.id },
@@ -145,15 +179,14 @@ export default function RegisterPage() {
         setAuthToken(response.register.token);
         router.push('/profile');
       }
-    } catch (err:any) {
+    } catch (err) {
       console.error('Full error:', err);
-      console.error('GraphQL errors:', err.graphQLErrors);
-      console.error('Network error:', err.networkError);
+      // console.error('GraphQL errors:', err.graphQLErrors);
+      // console.error('Network error:', err.networkError);
 
-      if (err.networkError?.result?.errors) {
-        console.error('Server errors:', err.networkError.result.errors);
+      // if (err.networkError?.result?.errors) {
+      //   console.error('Server errors:', err.networkError.result.errors);
       }
-    }
   };
 
   return (
@@ -242,7 +275,7 @@ export default function RegisterPage() {
                   onChange={(e) => {
                     // Clear diaspora location when unchecked
                     if (!e.target.checked) {
-                      setValue('diasporaLocation', { id: '' });
+                      setValue('diasporaLocationId', '');
                     }
                   }}
                 />
@@ -253,20 +286,20 @@ export default function RegisterPage() {
 
             {/* Diaspora Location Dropdown - Only shown when isDiaspora is true */}
             {watch('isDiaspora') && (
-              <div className="relative">
-                <label htmlFor="diasporaLocation" className="block text-yellow-300 mb-1">
-                  Kote ou ka rété an dyaspora *
+              <div 
+                className="relative py-10"
+              >
+                <label 
+                  // htmlFor="diasporaLocation" 
+                  className="block text-yellow-300 mb-1"
+                >
+                  Kote ou ka rété an dyaspora
                 </label>
                 <div
                   className="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-300 cursor-pointer flex justify-between items-center"
                   onClick={() => setShowDiasporaDropdown(!showDiasporaDropdown)}
                 >
-                  <span>
-                    {selectedDiasporaLocation 
-                      ? selectedDiasporaLocation.country 
-                      : "Chwazi kote ou ka rété an dyaspora"
-                    }
-                  </span>
+                  <span>{selectedDiasporaLocation ? selectedDiasporaLocation.country : "Chwazi yon peyi"}</span>
                   <FiChevronDown />
                 </div>
                 {showDiasporaDropdown && (
@@ -279,24 +312,25 @@ export default function RegisterPage() {
                           key={location.id}
                           className="p-2 hover:bg-gray-600 cursor-pointer text-white"
                           onClick={() => {
-                            setValue('diasporaLocation', { id: location.id });
+                            setValue('diasporaLocationId', location.id);
                             setShowDiasporaDropdown(false);
                           }}
                         >
-                          <div className="font-medium">{location.country}</div>
-                          {location.region && (
-                            <div className="text-sm text-gray-300">{location.region}</div>
-                          )}
+                          {location.country} {location.region && `(${location.region})`}
                         </div>
                       ))
                     )}
                   </div>
                 )}
-                <input type="hidden" {...register("diasporaLocation.id")} />
-                {errors.diasporaLocation?.id && (
-                  <p className="text-red-400 text-sm mt-1">{errors.diasporaLocation.id.message}</p>
+                <input type="hidden" {...register("diasporaLocationId")} />
+                {errors.diasporaLocationId && <p className="text-red-400 text-sm mt-1">{errors.diasporaLocationId.message}</p>}
+                {diasporaError && (
+                  <div className="mb-4 p-3 bg-red-500 text-white rounded">
+                    Diaspora locations error: {diasporaError.message}
+                  </div>
                 )}
               </div>
+
             )}
 
             {/* City of Origin Dropdown */}

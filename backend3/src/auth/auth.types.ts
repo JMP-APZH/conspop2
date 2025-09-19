@@ -79,6 +79,28 @@ export class RegisterInput {
   role?: PrismaRole;
 }
 
+@ObjectType()
+export class DiasporaLocation {
+  @Field()
+  id: string;
+
+  @Field()
+  country: string;
+
+  @Field()
+  countryCode: string;
+
+  @Field({ nullable: true })
+  region?: string;
+
+  constructor(location: any) {
+    this.id = location.id;
+    this.country = location.country;
+    this.countryCode = location.countryCode;
+    this.region = location.region || undefined;
+  }
+}
+
 @InputType()
 export class LoginInput {
   @Field()
