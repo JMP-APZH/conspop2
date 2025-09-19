@@ -8,7 +8,7 @@ import Link from 'next/link';
 import PublicLayout from '../../components/Layout/PublicLayout';
 import { setAuthToken } from '../../lib/auth';
 import { gql } from '@apollo/client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MartiniqueCity, CitiesResponse } from '../../types';
 
 
@@ -142,6 +142,40 @@ export default function RegisterPage() {
   const [showOriginDropdown, setShowOriginDropdown] = useState(false);
   const [showCurrentDropdown, setShowCurrentDropdown] = useState(false);
   const [showDiasporaDropdown, setShowDiasporaDropdown] = useState(false);
+
+  // 1. State management useEffect: to close other dropdowns when one opens
+  useEffect(() => {
+    // This ensures only one dropdown is open at a time
+    if (showDiasporaDropdown) {
+      setShowOriginDropdown(false);
+      setShowCurrentDropdown(false);
+    }
+    if (showOriginDropdown) {
+      setShowDiasporaDropdown(false);
+      setShowCurrentDropdown(false);
+    }
+    if (showCurrentDropdown) {
+      setShowDiasporaDropdown(false);
+      setShowOriginDropdown(false);
+    }
+  }, [showDiasporaDropdown, showOriginDropdown, showCurrentDropdown]);
+
+  // 2. useEffect for click outside handling
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Close all dropdowns if click is outside any dropdown
+      if (showDiasporaDropdown || showOriginDropdown || showCurrentDropdown) {
+        setShowDiasporaDropdown(false);
+        setShowOriginDropdown(false);
+        setShowCurrentDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDiasporaDropdown, showOriginDropdown, showCurrentDropdown]);
 
   const selectedOriginId = watch('cityOfOrigin.id');
   const selectedCurrentId = watch('currentCity.id');
@@ -287,7 +321,7 @@ export default function RegisterPage() {
             {/* Diaspora Location Dropdown - Only shown when isDiaspora is true */}
             {watch('isDiaspora') && (
               <div 
-                className="relative py-10"
+                className="relative py-4"
               >
                 <label 
                   // htmlFor="diasporaLocation" 
@@ -297,13 +331,16 @@ export default function RegisterPage() {
                 </label>
                 <div
                   className="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-300 cursor-pointer flex justify-between items-center"
-                  onClick={() => setShowDiasporaDropdown(!showDiasporaDropdown)}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent event bubbling
+                    setShowDiasporaDropdown(!showDiasporaDropdown);
+                  }}
                 >
                   <span>{selectedDiasporaLocation ? selectedDiasporaLocation.country : "Chwazi yon peyi"}</span>
                   <FiChevronDown />
                 </div>
                 {showDiasporaDropdown && (
-                  <div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
+                  <div className="absolute z-50 w-full mt-1 bg-gray-700 border border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
                     {diasporaLoading ? (
                       <div className="p-2 text-white">Chajman...</div>
                     ) : (
@@ -311,7 +348,8 @@ export default function RegisterPage() {
                         <div
                           key={location.id}
                           className="p-2 hover:bg-gray-600 cursor-pointer text-white"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent event bubbling
                             setValue('diasporaLocationId', location.id);
                             setShowDiasporaDropdown(false);
                           }}
@@ -344,7 +382,7 @@ export default function RegisterPage() {
                 <FiChevronDown />
               </div>
               {showOriginDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-40 w-full mt-1 bg-gray-700 border border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
                   {citiesLoading ? (
                     <div className="p-2 text-white">Chajman...</div>
                   ) : (
@@ -378,7 +416,7 @@ export default function RegisterPage() {
                 <FiChevronDown />
               </div>
               {showCurrentDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-30 w-full mt-1 bg-gray-700 border border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
                   {citiesLoading ? (
                     <div className="p-2 text-white">Chajman...</div>
                   ) : (
