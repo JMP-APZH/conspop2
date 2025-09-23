@@ -1,3 +1,7 @@
+// export interface CitiesQueryResponse {
+//   cities: CitiesResponse;
+// }
+
 export interface MartiniqueCity {
   id: string;
   name: string;
