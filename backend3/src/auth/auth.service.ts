@@ -136,6 +136,26 @@ export const AuthService = {
      });
   },
 
+  async updateProfile(userId: string, input: { nickname?: string; profileImage?: string }): Promise<PrismaUser & { 
+    cityOfOrigin: any; 
+    currentCity: any;
+    diasporaLocation?: any;
+  }> {
+    return prisma.user.update({
+      where: { id: userId },
+      data: {
+        nickname: input.nickname,
+        profileImage: input.profileImage,
+        updatedAt: new Date()
+      },
+      include: {
+        cityOfOrigin: true,
+        currentCity: true,
+        diasporaLocation: true
+      }
+    });
+  },
+
   async getTotalUsersCount(): Promise<number> {
     return prisma.user.count();
   },

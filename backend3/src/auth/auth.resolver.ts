@@ -1,6 +1,6 @@
 import { Arg, Mutation, Query, Resolver, Ctx, UseMiddleware, Int } from 'type-graphql';
 import { AuthService } from './auth.service';
-import { AuthPayload, RegisterInput, LoginInput, User, UserVerification, CitiesResponse, MartiniqueCity, DiasporaLocation } from './auth.types';
+import { AuthPayload, RegisterInput, LoginInput, User, UserVerification, CitiesResponse, MartiniqueCity, DiasporaLocation, UpdateProfileInput } from './auth.types';
 import { Context } from '../context';
 import { isAdmin, isAuth } from './auth.middleware';
 
@@ -16,6 +16,20 @@ export class AuthResolver {
       token, 
       user: new User(prismaUser) // Now properly constructed
     };
+  }
+
+  @Mutation(() => User)
+  @UseMiddleware(isAuth)
+  async updateProfile(
+    @Arg('input') input: UpdateProfileInput,
+    @Ctx() ctx: Context
+  ) {
+    if (!ctx.userId) {
+      throw new Error('Not authenticated');
+    }
+    
+    const updatedUser = await AuthService.updateProfile(ctx.userId, input);
+    return new User(updatedUser);
   }
 
   @Mutation(() => AuthPayload)

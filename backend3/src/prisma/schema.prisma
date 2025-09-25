@@ -51,6 +51,7 @@ model User {
   firstName       String
   lastName        String
   nickname        String?
+  profileImage    String?
   isDiaspora      Boolean          @default(false)
   cityOfOriginId  String
   cityOfOrigin    MartiniqueCity   @relation("UserOriginCity", fields: [cityOfOriginId], references: [id], onDelete: NoAction)

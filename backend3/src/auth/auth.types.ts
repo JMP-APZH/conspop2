@@ -123,6 +123,15 @@ export class LoginInput {
   password!: string;
 }
 
+@InputType()
+export class UpdateProfileInput {
+  @Field({ nullable: true })
+  nickname?: string;
+
+  @Field({ nullable: true })
+  profileImage?: string;
+}
+
 @ObjectType()
 export class User {
   @Field()
@@ -139,6 +148,9 @@ export class User {
 
   @Field({ nullable: true })
   nickname?: string;
+
+  @Field({ nullable: true }) // Add this field
+  profileImage?: string;
 
   @Field()
   isDiaspora: boolean;
@@ -167,6 +179,7 @@ export class User {
     this.firstName = user.firstName;
     this.lastName = user.lastName;
     this.nickname = user.nickname || undefined;
+    this.profileImage = user.profileImage || undefined;
     this.isDiaspora = user.isDiaspora;
     this.cityOfOrigin = new MartiniqueCity(user.cityOfOrigin);
     this.currentCity = new MartiniqueCity(user.currentCity);
