@@ -42,6 +42,15 @@ export default function ProfilePage() {
     }
   }, [router]);
 
+  // Add this debug log
+  useEffect(() => {
+    if (data?.me) {
+      console.log('🟢 Profile data received:', data.me);
+      console.log('🟢 isDiaspora:', data.me.isDiaspora);
+      console.log('🟢 diasporaLocation:', data.me.diasporaLocation);
+    }
+  }, [data]);
+
   if (loading) return <PrivateLayout><div>Loading...</div></PrivateLayout>;
   if (error) return <PrivateLayout><div>Error: {error.message}</div></PrivateLayout>;
 
@@ -65,12 +74,17 @@ export default function ProfilePage() {
               <h2 className="text-lg font-semibold">Adrès</h2>
               <div className="mt-2 space-y-2">
                 <p><span className="font-medium">Kote ou sòti:</span> {data?.me?.cityOfOrigin?.name}</p>
-                {/* <p><span className="font-medium">Kote ou retè:</span> {data?.me?.currentCity?.name}</p> */}
+                <p><span className="font-medium">Kote ou retè:</span> {data?.me?.currentCity?.name}</p>
               </div>
-              {data?.me?.isDiaspora ? (
+              {/* {data?.me?.isDiaspora ? (
                 <p><span className="font-medium">Kote ou retè an dyaspora:</span> {data?.me?.diasporaLocation?.country}</p>
               ) : (
                 <p><span className="font-medium">Kote ou retè:</span> {data?.me?.currentCity?.name}</p>
+              )} */}
+              {data?.me?.isDiaspora ? (
+                <p><span className="font-medium">Kote ou retè an dyaspora la:</span> {data?.me?.diasporaLocation?.country}</p>
+              ) : (
+                <p><span className="font-medium">Kote ou retè:</span> No Diaspora location</p>
               )}
             </div>
 

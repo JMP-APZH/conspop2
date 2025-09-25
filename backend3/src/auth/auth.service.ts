@@ -125,7 +125,7 @@ export const AuthService = {
     );
   },
 
-  async getUserById(id: string): Promise<(PrismaUser & { cityOfOrigin: any; currentCity: any }) | null> {
+  async getUserById(id: string): Promise<(PrismaUser & { cityOfOrigin: any; currentCity: any, diasporaLocation?: any; }) | null> {
     return prisma.user.findUnique({ 
       where: { id },
       include: {
