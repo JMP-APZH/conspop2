@@ -13,6 +13,7 @@ const ME_QUERY = gql`
       firstName
       lastName
       nickname
+      isDiaspora
       cityOfOrigin {  # ✅ Add subfields !
         id
         name
@@ -20,6 +21,10 @@ const ME_QUERY = gql`
       currentCity {   # ✅ Add subfields !
         id
         name
+      }
+      diasporaLocation {  # ✅ Add this field with subfields
+        id
+        country
       }
       role
       createdAt
@@ -60,7 +65,7 @@ export default function ProfilePage() {
               <h2 className="text-lg font-semibold">Adrès</h2>
               <div className="mt-2 space-y-2">
                 <p><span className="font-medium">Kote ou sòti:</span> {data?.me?.cityOfOrigin?.name}</p>
-                <p><span className="font-medium">Kote ou retè:</span> {data?.me?.currentCity?.name}</p>
+                {/* <p><span className="font-medium">Kote ou retè:</span> {data?.me?.currentCity?.name}</p> */}
               </div>
               {data?.me?.isDiaspora ? (
                 <p><span className="font-medium">Kote ou retè an dyaspora:</span> {data?.me?.diasporaLocation?.country}</p>

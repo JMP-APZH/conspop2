@@ -48,6 +48,15 @@ export class CityInput {
   name?: string;
 }
 
+@InputType()
+export class DiasporaLocationInput {
+  @Field()
+  id!: string;
+
+  @Field({ nullable: true })
+  country?: string;
+}
+
 
 @InputType()
 export class RegisterInput {
@@ -74,6 +83,10 @@ export class RegisterInput {
 
   @Field(() => CityInput)  // ✅ Changed to CityInput
   currentCity!: CityInput;
+
+  @Field(() => DiasporaLocationInput, { nullable: true }) // Use DiasporaLocationInput
+  diasporaLocation?: DiasporaLocationInput;
+
 
   @Field(() => PrismaRole, { nullable: true }) // Explicitly specify the enum type; Make role optional
   role?: PrismaRole;
@@ -136,6 +149,9 @@ export class User {
   @Field(() => MartiniqueCity)
   currentCity: MartiniqueCity;
 
+  @Field(() => DiasporaLocation, { nullable: true }) // Add this field
+  diasporaLocation?: DiasporaLocation;
+
   @Field(() => PrismaRole) // Explicitly specify the enum type
   role!: PrismaRole;
 
@@ -145,7 +161,7 @@ export class User {
   @Field()
   updatedAt: Date;
 
-  constructor(user: PrismaUser & { cityOfOrigin: PrismaMartiniqueCity; currentCity: PrismaMartiniqueCity }) {
+  constructor(user: PrismaUser & { cityOfOrigin: PrismaMartiniqueCity; currentCity: PrismaMartiniqueCity, diasporaLocation?: any; }) {
     this.id = user.id;
     this.email = user.email;
     this.firstName = user.firstName;
@@ -154,6 +170,7 @@ export class User {
     this.isDiaspora = user.isDiaspora;
     this.cityOfOrigin = new MartiniqueCity(user.cityOfOrigin);
     this.currentCity = new MartiniqueCity(user.currentCity);
+    this.diasporaLocation = user.diasporaLocation ? new DiasporaLocation(user.diasporaLocation) : undefined;
     this.role = user.role;
     this.createdAt = user.createdAt;
     this.updatedAt = user.updatedAt;

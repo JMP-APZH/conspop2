@@ -863,19 +863,22 @@ const schema = yup.object().shape({
   firstName: yup.string().required('First name is required'),
   lastName: yup.string().required('Last name is required'),
   isDiaspora: yup.boolean().required('Please specify if you are in diaspora'),
-  diasporaLocationId: yup.string()
-    .default('')
-    .when('isDiaspora', {
-      is: true,
-      then: yup.string().required('Diaspora location is required when living abroad'),
-      otherwise: yup.string().nullable().optional()
-    }),
+  diasporaLocationId: yup.string().nullable(),
   cityOfOrigin: yup.object().shape({
     id: yup.string().required('City of origin is required')
   }).required('City of origin is required'),
   currentCity: yup.object().shape({
     id: yup.string().required('Current city is required')
   }).required('Current city is required'),
+}).test('diaspora-required', 'Diaspora location is required when living abroad', function(value) {
+  // Custom validation for diaspora location
+  if (value.isDiaspora && !value.diasporaLocationId) {
+    return this.createError({
+      path: 'diasporaLocationId',
+      message: 'Diaspora location is required when living abroad'
+    });
+  }
+  return true;
 });
 
 export default function RegisterPage() {
@@ -961,31 +964,51 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      const { data: response } = await registerUser({
-        variables: {
-          input: {
-            email: data.email,
-            password: data.password,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            isDiaspora: data.isDiaspora,
-            diasporaLocation: data.isDiaspora && data.diasporaLocationId
-              ? { id: data.diasporaLocationId }
-              : undefined,
-            cityOfOrigin: { id: data.cityOfOrigin.id },
-            currentCity: { id: data.currentCity.id },
-          }
-        }
-      });
+      console.log('🟢 Starting form submission...');
+    
+      // Log the complete input structure
+    const input = {
+      email: data.email,
+      password: data.password,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      isDiaspora: data.isDiaspora,
+      diasporaLocation: data.isDiaspora && data.diasporaLocationId
+        ? { id: data.diasporaLocationId }
+        : undefined,
+      cityOfOrigin: { id: data.cityOfOrigin.id },
+      currentCity: { id: data.currentCity.id },
+    };
 
-      if (response?.register?.token) {
-        setAuthToken(response.register.token);
-        router.push('/profile');
-      }
-    } catch (err) {
-      console.error('Registration error:', err);
+    console.log('🟢 Complete input object:', JSON.stringify(input, null, 2));
+    console.log('🟢 diasporaLocation value:', input.diasporaLocation);
+    console.log('🟢 cityOfOrigin value:', input.cityOfOrigin);
+    console.log('🟢 currentCity value:', input.currentCity);
+
+    const { data: response } = await registerUser({
+      variables: { input }
+    });
+
+    console.log('🟢 Registration successful:', response);
+
+    if (response?.register?.token) {
+      setAuthToken(response.register.token);
+      router.push('/profile');
     }
-  };
+  } catch (err) {
+    console.error('🔴 Full error object:', err);
+    console.error('🔴 Error message:', err.message);
+    console.error('🔴 Error stack:', err.stack);
+    
+    // Check for GraphQL specific errors
+    if (err.graphQLErrors) {
+      console.error('🔴 GraphQL Errors:', err.graphQLErrors);
+    }
+    if (err.networkError) {
+      console.error('🔴 Network Error:', err.networkError);
+    }
+  }
+};
 
   return (
     <PublicLayout>
@@ -1003,7 +1026,16 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            console.log('🟢 Form submit event triggered');
+            try {
+              handleSubmit(onSubmit)(e);
+            } catch (submitError) {
+              console.error('🔴 Form submission error:', submitError);
+            } 
+            
+            }} className="space-y-4">
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-yellow-300 mb-1">Mèl ou Pipiri</label>

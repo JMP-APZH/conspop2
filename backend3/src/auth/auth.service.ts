@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET!;
 
 export const AuthService = {
-  async register(input: RegisterInput): Promise<PrismaUser & { cityOfOrigin: any; currentCity: any }> {
+  async register(input: RegisterInput): Promise<PrismaUser & { cityOfOrigin: any; currentCity: any, diasporaLocation?: any; }> {
     
     // Validate cities exist
     const [originCity, currentCity] = await Promise.all([
@@ -17,6 +17,29 @@ export const AuthService = {
 
     if (!originCity) throw new Error(`City of origin with ID ${input.cityOfOrigin.id} not found`);
     if (!currentCity) throw new Error(`Current city with ID ${input.currentCity.id} not found`);
+
+    // === ADD THE VALIDATION HERE ===
+  // Validate diaspora location logic
+  if (input.isDiaspora && !input.diasporaLocation?.id) {
+    throw new Error('Diaspora location is required when living abroad');
+  }
+
+  if (!input.isDiaspora && input.diasporaLocation?.id) {
+    throw new Error('Diaspora location should not be provided when not living abroad');
+  }
+  // === END OF VALIDATION ===
+
+    // Validate diaspora location if provided
+    let diasporaLocationId: string | null = null;
+    if (input.isDiaspora && input.diasporaLocation?.id) {
+      const diasporaLocation = await prisma.diasporaLocation.findUnique({
+        where: { id: input.diasporaLocation.id }
+      });
+      if (!diasporaLocation) {
+        throw new Error(`Diaspora location with ID ${input.diasporaLocation.id} not found`);
+      }
+      diasporaLocationId = input.diasporaLocation.id;
+    }
 
     const hashedPassword = await bcrypt.hash(input.password, 10);
 
@@ -30,21 +53,24 @@ export const AuthService = {
         isDiaspora: input.isDiaspora,
         cityOfOriginId: input.cityOfOrigin.id,
         currentCityId: input.currentCity.id,
+        diasporaLocationId: diasporaLocationId,
         role: input.role || PrismaRole.USER // Instead of just Role.USER
       },
       include: {
         cityOfOrigin: true,
-        currentCity: true
+        currentCity: true,
+        diasporaLocation: true
       }
     });
   },
 
-  async login(email: string, password: string): Promise<PrismaUser & { cityOfOrigin: any; currentCity: any }> {
+  async login(email: string, password: string): Promise<PrismaUser & { cityOfOrigin: any; currentCity: any, diasporaLocation?: any; }> {
     const user = await prisma.user.findUnique({ 
       where: { email },
       include: {
         cityOfOrigin: true,
-        currentCity: true
+        currentCity: true,
+        diasporaLocation: true
       }
      });
     if (!user) throw new Error('User not found');
@@ -61,7 +87,8 @@ export const AuthService = {
     data: { lastLoginAt: new Date() },
       include: {
         cityOfOrigin: true,
-        currentCity: true
+        currentCity: true,
+        diasporaLocation: true
       }
   });
   },
@@ -103,7 +130,8 @@ export const AuthService = {
       where: { id },
       include: {
         cityOfOrigin: true,
-        currentCity: true
+        currentCity: true,
+        diasporaLocation: true
       }
      });
   },
