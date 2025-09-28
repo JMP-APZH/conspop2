@@ -53,7 +53,7 @@ export default function ProfilePage() {
       <div className="max-w-2xl mx-auto py-12 px-4">
         <div className="bg-gray-800 p-8 rounded-lg shadow-lg text-yellow-300">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Pwofil aw'</h1>
+            <h1 className="text-2xl font-bold">Pwofil aw&apos;</h1>
             <Link 
               href="/profile/edit" 
               className="bg-yellow-300 text-gray-800 px-4 py-2 rounded font-bold hover:bg-yellow-400 transition-colors"
@@ -111,7 +111,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <h2 className="text-lg font-semibold mb-4">Kont' ou</h2>
+              <h2 className="text-lg font-semibold mb-4">Kont&apos; ou</h2>
               <div className="space-y-3">
                 <p><span className="font-medium">Rol:</span> {data?.me?.role}</p>
                 <p><span className="font-medium">Dat kréyasyon:</span> {new Date(data?.me?.createdAt).toLocaleDateString()}</p>

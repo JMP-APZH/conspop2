@@ -143,7 +143,7 @@ export default function EditProfilePage() {
     <PrivateLayout>
       <div className="max-w-2xl mx-auto py-12 px-4">
         <div className="bg-gray-800 p-8 rounded-lg shadow-lg text-yellow-300">
-          <h1 className="text-2xl font-bold mb-6">Modifyé Pwofil aw'</h1>
+          <h1 className="text-2xl font-bold mb-6">Modifyé Pwofil aw&apos;</h1>
           
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Profile Image Upload */}

@@ -2,7 +2,7 @@ import { ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Navbar from './Navbar';
 import { isAuthenticated } from '../../lib/auth';
-import './globals.css'
+// import './globals.css'
 
 interface PrivateLayoutProps {
   children: ReactNode;

@@ -1,7 +1,7 @@
 import type { NextPage } from 'next';
 import Link from 'next/link';
 import PublicLayout from '../components/Layout/PublicLayout';
-import { FiHome, FiInfo, FiMail, FiUser } from 'react-icons/fi';
+import { FiInfo } from 'react-icons/fi';
 import { RiSurveyFill } from 'react-icons/ri';
 import { SiLimesurvey } from "react-icons/si";
 import { AiOutlineLogin } from "react-icons/ai";
@@ -14,10 +14,10 @@ const Home: NextPage = () => {
         <div className='py-12'>
           <div className="-ml-5 mr-15">
             <h1 className="ml-15 mr-10 font-bold text-center bg-red-800 p-2 text-lg md:text-xl lg:text-4xl">
-              Kontan Wè Zot'
+              Kontan Wè Zot&apos;
             </h1>
             <h1 className="ml-15 mr-10 font-bold text-center bg-red-800 mb-4 pb-2 text-lg md:text-xl lg:text-4xl">
-              Lyannaj' pou fè péyi a vansé
+              Lyannaj&apos; pou fè péyi a vansé
             </h1>
           </div>
           

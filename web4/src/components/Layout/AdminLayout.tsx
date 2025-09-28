@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import Navbar from './Navbar';
 import { isAuthenticated } from '../../lib/auth';
 import { useQuery } from '@apollo/client';
-import { gql } from '@apollo/client';
 import { ME_ROLE_QUERY } from '../../lib/queries';
 
 interface AdminLayoutProps {

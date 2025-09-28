@@ -3,6 +3,8 @@
 
 import { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
+import { ScanData, ProductInfo, FormData as FormDataType } from '../../types/scanner';
+import ProductForm from './ProductForm';
 
 // Dynamically import the barcode scanner (reduces initial bundle size)
 const BarcodeScanner = dynamic(() => import('./BarcodeScanner'), {
@@ -11,44 +13,47 @@ const BarcodeScanner = dynamic(() => import('./BarcodeScanner'), {
 });
 
 interface ProductScannerProps {
-  onScanSubmit: (data: any) => void;
+  onScanSubmit: (data: ScanData) => void;
   isLoading: boolean;
 }
 
 export default function ProductScanner({ onScanSubmit, isLoading }: ProductScannerProps) {
   const [scanStep, setScanStep] = useState<'scan' | 'form'>('scan');
   const [barcode, setBarcode] = useState('');
-  const [productInfo, setProductInfo] = useState<any>(null);
+  const [productInfo, setProductInfo] = useState<ProductInfo | null>(null);
 
-  const handleBarcodeDetected = useCallback(async (code: string) => {
-    setBarcode(code);
-    
+  const handleBarcodeDetected = useCallback((code: string) => {
+  setBarcode(code);
+  
+  // Make the API call separately
+  const fetchProductInfo = async () => {
     try {
-      // Fetch product info from scanner server
       const response = await fetch(`${process.env.NEXT_PUBLIC_SCANNER_API}/api/products/${code}`);
       const result = await response.json();
       
       if (result.success) {
         setProductInfo(result.data);
       } else {
-        // New product
         setProductInfo({ barcode: code });
       }
-      
-      setScanStep('form');
     } catch (error) {
       console.error('Error fetching product info:', error);
       setProductInfo({ barcode: code });
+    } finally {
       setScanStep('form');
     }
-  }, []);
+  };
 
-  const handleFormSubmit = (formData: any) => {
-    onScanSubmit({
+  fetchProductInfo();
+}, []);
+
+  const handleFormSubmit = (formData: FormDataType) => {
+    const scanData: ScanData = {
       ...formData,
       barcode,
       externalUserId: 'temp-user' // Replace with actual user ID from your auth system
-    });
+    };
+    onScanSubmit(scanData);
   };
 
   return (

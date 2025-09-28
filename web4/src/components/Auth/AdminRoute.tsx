@@ -1,7 +1,6 @@
 // web2/src/components/Auth/AdminRoute.tsx
 import { useQuery } from '@apollo/client';
 import { useRouter } from 'next/router';
-import { gql } from '@apollo/client';
 import { isAuthenticated } from '../../lib/auth';
 import { ME_ROLE_QUERY } from '../../lib/queries';
 

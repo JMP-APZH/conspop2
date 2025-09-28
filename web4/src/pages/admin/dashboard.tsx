@@ -34,6 +34,16 @@ const GET_STATS = gql`
   }
 `;
 
+interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role?: 'USER' | 'ADMIN';
+  createdAt: string;
+  
+}
+
 export default function AdminUsersPage() {
   const { loading, error, data, refetch } = useQuery(GET_USERS, {
     fetchPolicy: 'network-only', // Always fetch fresh data
@@ -119,7 +129,7 @@ export default function AdminUsersPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-gray-800 divide-y divide-gray-700">
-                  {data?.users?.map((user: any) => (
+                  {data?.users?.map((user: User) => (
                     <tr key={user.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-white">
                         {user.firstName} {user.lastName}

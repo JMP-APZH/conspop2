@@ -9,7 +9,7 @@ import { useApolloClient } from '@apollo/client';
 import { removeAuthToken } from '../../lib/auth';
 import { ReactNode } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import './globals.css'
+// import './globals.css'
 
 interface NavLinkProps {
   href: string;

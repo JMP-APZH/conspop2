@@ -1,6 +1,4 @@
 import { useQuery } from '@apollo/client';
-import { useRouter } from 'next/router';
-import { useEffect } from 'react';
 import { gql } from '@apollo/client';
 import AdminLayout from '../../components/Layout/AdminLayout';
 import AdminRoute from '@/components/Auth/AdminRoute';
@@ -19,8 +17,17 @@ const ADMIN_DATA_QUERY = gql`
   }
 `;
 
+interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role?: 'USER' | 'ADMIN';
+  createdAt: string;
+  
+}
+
 export default function AdminDashboard() {
-  const router = useRouter();
   const { loading, error, data } = useQuery(ADMIN_DATA_QUERY);
 
   if (loading) return <AdminLayout><div>Loading...</div></AdminLayout>;
@@ -45,7 +52,7 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-gray-800 divide-y divide-gray-700">
-                  {data?.users?.map((user: any) => (
+                  {data?.users?.map((user: User) => (
                     <tr key={user.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-white">{user.firstName} {user.lastName}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-white">{user.email}</td>

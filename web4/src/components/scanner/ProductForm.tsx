@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { FormData, ProductInfo } from '../../types/scanner';
 
 const CATEGORIES = [
   { id: '1', name: 'Viande', description: 'Viandes et volailles' },
@@ -31,14 +32,14 @@ const ESSENTIALITY_OPTIONS = [
 
 interface ProductFormProps {
   barcode: string;
-  productInfo: any;
-  onSubmit: (formData: any) => void;
+  productInfo: ProductInfo | null;
+  onSubmit: (formData: FormData) => void;
   onBack: () => void;
   isLoading: boolean;
 }
 
 export default function ProductForm({ barcode, productInfo, onSubmit, onBack, isLoading }: ProductFormProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     price: '',
     qualityScore: '',
     categoryId: '',
@@ -46,7 +47,8 @@ export default function ProductForm({ barcode, productInfo, onSubmit, onBack, is
     location: '',
     essentiality: '',
     isBQP: false,
-    image: null as File | null,
+    // image: null as File | null,
+    image: null,
   });
 
   // Auto-fill from product data if available
@@ -55,8 +57,8 @@ export default function ProductForm({ barcode, productInfo, onSubmit, onBack, is
       setFormData(prev => ({
         ...prev,
         categoryId: productInfo.category?.id || '',
-        qualityScore: productInfo.nutriscore || '',
-      }));
+        qualityScore: '', // Don't auto-fill quality score as it's user input
+    }));
     }
   }, [productInfo]);
 

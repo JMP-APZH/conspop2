@@ -16,11 +16,11 @@ const nextConfig: NextConfig = {
     }),
   },
   // Increase body size limit for file uploads
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
+  // api: {
+  //   bodyParser: {
+  //     sizeLimit: '10mb',
+  //   },
+  // },
 };
 
 export default nextConfig;

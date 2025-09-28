@@ -775,7 +775,7 @@ import PublicLayout from '../../components/Layout/PublicLayout';
 import { setAuthToken } from '../../lib/auth';
 import { gql } from '@apollo/client';
 import { useEffect, useState, useRef } from 'react';
-import { CitiesResponse, MartiniqueCity } from '../../types';
+import { CitiesResponse } from '../../types';
 
 interface DiasporaLocation {
   id: string;
@@ -888,7 +888,8 @@ export default function RegisterPage() {
   const { data: diasporaData, loading: diasporaLoading, error: diasporaError } = useQuery<DiasporaLocationResponse>(GET_DIASPORA_LOCATIONS_QUERY);
   
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<RegisterFormData>({
-    resolver: yupResolver(schema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: yupResolver(schema) as any,
     defaultValues: {
       email: '',
       password: '',
@@ -914,8 +915,8 @@ export default function RegisterPage() {
   const selectedCurrentId = watch('currentCity.id');
   const selectedDiasporaId = watch('diasporaLocationId');
 
-  const selectedOriginCity = citiesData?.cities?.cities?.find(city => city.id === selectedOriginId);
-  const selectedDiasporaLocation = diasporaData?.diasporaLocations?.find((loc: any) => loc.id === selectedDiasporaId);
+  // const selectedOriginCity = citiesData?.cities?.cities?.find(city => city.id === selectedOriginId);
+  const selectedDiasporaLocation = diasporaData?.diasporaLocations?.find((loc: DiasporaLocation) => loc.id === selectedDiasporaId);
 
   // Close other dropdowns when one opens
   useEffect(() => {
@@ -997,16 +998,24 @@ export default function RegisterPage() {
     }
   } catch (err) {
     console.error('🔴 Full error object:', err);
-    console.error('🔴 Error message:', err.message);
+    // console.error('🔴 Error message:', err.message);
+    // console.error('🔴 Error stack:', err.stack);
+
+    // Properly type the error
+  if (err instanceof Error) {
+    console.error('🔴 Error message:', err.message);        
     console.error('🔴 Error stack:', err.stack);
+  } else {
+    console.error('🔴 Unknown error type:', err);
+  }
     
-    // Check for GraphQL specific errors
-    if (err.graphQLErrors) {
-      console.error('🔴 GraphQL Errors:', err.graphQLErrors);
-    }
-    if (err.networkError) {
-      console.error('🔴 Network Error:', err.networkError);
-    }
+    // // Check for GraphQL specific errors
+    // if (err.graphQLErrors) {
+    //   console.error('🔴 GraphQL Errors:', err.graphQLErrors);
+    // }
+    // if (err.networkError) {
+    //   console.error('🔴 Network Error:', err.networkError);
+    // }
   }
 };
 
@@ -1014,11 +1023,11 @@ export default function RegisterPage() {
     <PublicLayout>
       <div className="max-w-md mx-auto py-12 px-4">
         <Link href="/" className="flex items-center text-yellow-300 mb-6 hover:underline">
-          <FiArrowLeft className="mr-2" /> Retour à l'accueil
+          <FiArrowLeft className="mr-2" /> Retour à l&apos;accueil
         </Link>
 
         <div className="bg-gray-800 p-8 rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold text-yellow-300 mb-6">Kréyé kont' ou</h1>
+          <h1 className="text-2xl font-bold text-yellow-300 mb-6">Kréyé kont&apos; ou</h1>
 
           {error && (
             <div className="mb-4 p-3 bg-red-500 text-white rounded">
@@ -1050,7 +1059,7 @@ export default function RegisterPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-yellow-300 mb-1">Mod'pas'</label>
+              <label htmlFor="password" className="block text-yellow-300 mb-1">Mod&apos; pas&apos;</label>
               <input
                 {...register("password")}
                 type="password"
@@ -1062,7 +1071,7 @@ export default function RegisterPage() {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-yellow-300 mb-1">Anko an fwa mod'pas' la</label>
+              <label htmlFor="confirmPassword" className="block text-yellow-300 mb-1">Anko an fwa mod&apos; pas&apos;la</label>
               <input
                 {...register("confirmPassword")}
                 type="password"
@@ -1181,7 +1190,7 @@ export default function RegisterPage() {
                     {(showDiasporaDropdown || showDiasporaDropdownRef.current) && (
                       <div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto dropdown-container">
                         {diasporaData.diasporaLocations?.length === 0 ? (
-                          <div className="p-2 text-white">Pa gen okenn kote diaspora ki disponib</div>
+                          <div className="p-2 text-white">Pa gen okenn kote diaspora ki disponib&apos;</div>
                         ) : (
                           diasporaData.diasporaLocations?.map((location) => (
                             <div
@@ -1299,7 +1308,7 @@ export default function RegisterPage() {
           </form>
 
           <p className="mt-6 text-center text-yellow-300">
-            Ou za ni an kont'?{' '}
+            Ou za ni an kont&apos; ?{' '}
             <Link href="/auth/login" className="font-bold hover:underline">
               Konèkté
             </Link>

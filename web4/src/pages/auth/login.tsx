@@ -102,7 +102,7 @@ export default function LoginPage() {
             </div>
 
             <div className="relative">
-              <label htmlFor="password" className="block text-yellow-300 mb-1">Mod'pas'</label>
+              <label htmlFor="password" className="block text-yellow-300 mb-1">Mod&apos; pas&apos;</label>
               <input
                 {...register("password")}
                 type={showPassword ? "text" : "password"}
@@ -133,14 +133,14 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center space-y-2">
             <p className="text-yellow-300">
-              Ou poho ni kont' ou?{' '}
+              Ou poho ni kont&apos; ou?{' '}
               <Link href="/auth/register" className="font-bold hover:underline">
-                Réjistré kow'
+                Réjistré kow&apos
               </Link>
             </p>
             <p className="text-yellow-300">
               <Link href="/auth/forgot-password" className="text-sm hover:underline">
-                Oublié mod'pas' ou?
+                Oublié mod&apos pas&apos; ou?
               </Link>
             </p>
           </div>

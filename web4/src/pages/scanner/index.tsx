@@ -3,31 +3,44 @@
 
 import { useState } from 'react';
 import ProductScanner from '../../components/scanner/ProductScanner';
+import { ScanData } from '../../types/scanner';
 
 const SCANNER_API = process.env.NEXT_PUBLIC_SCANNER_API || 'http://localhost:3001';
 
+interface ScanResponse {
+  id: string;
+  barcode: string;
+  price: number;
+  qualityScore: string;
+  shopName: string;
+  location: string;
+  product?: {
+    name: string;
+  };
+}
+
 export default function ScannerPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [lastScan, setLastScan] = useState(null);
+  const [lastScan, setLastScan] = useState<ScanResponse | null>(null);
 
-  const handleScanSubmit = async (scanData: any) => {
+  const handleScanSubmit = async (scanData: ScanData) => {
     setIsLoading(true);
     try {
       // For file upload, we need FormData
       const formData = new FormData();
       
-      // Append all fields
-      Object.keys(scanData).forEach(key => {
-        if (key === 'image' && scanData.image) {
-          formData.append('image', scanData.image);
-        } else {
-          formData.append(key, scanData[key]);
+      // Append all fields - FIXED: Proper type handling
+      Object.entries(scanData).forEach(([key, value]) => {
+        if (key === 'image' && value instanceof File) {
+          formData.append('image', value);
+        } else if (value !== null && value !== undefined) {
+          formData.append(key, value.toString());
         }
       });
 
       const response = await fetch(`${SCANNER_API}/api/scan`, {
         method: 'POST',
-        body: formData, // No Content-Type header for FormData
+        body: formData,
       });
       
       const result = await response.json();
