@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { FiHome, FiInfo, FiMail, FiUser, FiSettings } from 'react-icons/fi';
 import { RiSurveyFill } from 'react-icons/ri';
 import { SiLimesurvey } from "react-icons/si";
+import { MdDocumentScanner } from "react-icons/md";
 import { AiOutlineLogin, AiOutlineLogout } from "react-icons/ai";
 import { useApolloClient } from '@apollo/client';
 import { removeAuthToken } from '../../lib/auth';
@@ -52,6 +53,11 @@ export default function Navbar() {
           <NavLink href="/" icon={<FiHome />} text="A Kay" />
           <NavLink href="/about" icon={<FiInfo />} text="Sa ou pou sav'" />
           <NavLink href="/contact" icon={<FiMail />} text="Késyon ? Pa ézité !" />
+          <NavLink 
+            href="/scanner" 
+            icon={<MdDocumentScanner />} 
+            text="Skané artik la" 
+          />
         </nav>
         
         {/* Mobile Navigation (SSR) */}
@@ -59,6 +65,11 @@ export default function Navbar() {
           <NavLink href="/" icon={<FiHome />} />
           <NavLink href="/about" icon={<FiInfo />} />
           <NavLink href="/contact" icon={<FiMail />} />
+          <NavLink 
+            href="/scanner" 
+            icon={<MdDocumentScanner />} 
+            text="Skané artik la" 
+          />
         </nav>
       </>
     );
@@ -78,6 +89,11 @@ export default function Navbar() {
         )}
         <NavLink href="/about" icon={<FiInfo />} text="Sa ou pou sav'" />
         <NavLink href="/contact" icon={<FiMail />} text="Késyon ? Pa ézité !" />
+        <NavLink 
+            href="/scanner" 
+            icon={<MdDocumentScanner />} 
+            text="Skané artik la" 
+          />
         {authenticated ? (
           <button 
             onClick={handleLogout}
@@ -102,6 +118,11 @@ export default function Navbar() {
         )}
         <NavLink href="/about" icon={<FiInfo />} />
         <NavLink href="/contact" icon={<FiMail />} />
+        <NavLink 
+            href="/scanner" 
+            icon={<MdDocumentScanner />} 
+            text="Skané artik la" 
+          />
         {authenticated ? (
           <button 
             onClick={handleLogout}
