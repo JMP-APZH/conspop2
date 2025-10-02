@@ -5,12 +5,20 @@ import { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { ScanData, ProductInfo, FormData as FormDataType } from '../../types/scanner';
 import ProductForm from './ProductForm';
+import { BarcodeScannerProps } from './types';
 
-// Dynamically import the barcode scanner (reduces initial bundle size)
-const BarcodeScanner = dynamic(() => import('./BarcodeScanner'), {
-  ssr: false,
-  loading: () => <div>Chargement du scanner...</div>
-});
+// Define the props interface for BarcodeScanner
+// Import the interface from BarcodeScanner
+// import { BarcodeScannerProps } from './BarcodeScanner';
+
+// Dynamically import the barcode scanner with proper typing
+const BarcodeScanner = dynamic<BarcodeScannerProps>(
+  () => import('./BarcodeScanner'),
+  {
+    ssr: false,
+    loading: () => <div>Chargement du scanner...</div>
+  }
+);
 
 interface ProductScannerProps {
   onScanSubmit: (data: ScanData) => void;
@@ -23,29 +31,29 @@ export default function ProductScanner({ onScanSubmit, isLoading }: ProductScann
   const [productInfo, setProductInfo] = useState<ProductInfo | null>(null);
 
   const handleBarcodeDetected = useCallback((code: string) => {
-  setBarcode(code);
-  
-  // Make the API call separately
-  const fetchProductInfo = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_SCANNER_API}/api/products/${code}`);
-      const result = await response.json();
-      
-      if (result.success) {
-        setProductInfo(result.data);
-      } else {
+    setBarcode(code);
+    
+    // Make the API call separately
+    const fetchProductInfo = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SCANNER_API}/api/products/${code}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          setProductInfo(result.data);
+        } else {
+          setProductInfo({ barcode: code });
+        }
+      } catch (error) {
+        console.error('Error fetching product info:', error);
         setProductInfo({ barcode: code });
+      } finally {
+        setScanStep('form');
       }
-    } catch (error) {
-      console.error('Error fetching product info:', error);
-      setProductInfo({ barcode: code });
-    } finally {
-      setScanStep('form');
-    }
-  };
+    };
 
-  fetchProductInfo();
-}, []);
+    fetchProductInfo();
+  }, []);
 
   const handleFormSubmit = (formData: FormDataType) => {
     const scanData: ScanData = {
