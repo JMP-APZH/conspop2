@@ -1,4 +1,16 @@
 // web4/src/types/scanner.ts
+
+export interface BarcodeScannerProps {
+  onBarcodeDetected: (code: string) => void;
+}
+
+export interface ScanbotBarcode {
+  text: string;
+  format: string;
+  bytes: number[];
+}
+
+
 export interface ScanData {
   barcode: string;
   price: string;

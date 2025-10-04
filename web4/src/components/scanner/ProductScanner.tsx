@@ -5,18 +5,13 @@ import { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { ScanData, ProductInfo, FormData as FormDataType } from '../../types/scanner';
 import ProductForm from './ProductForm';
-import { BarcodeScannerProps } from './types';
 
-// Define the props interface for BarcodeScanner
-// Import the interface from BarcodeScanner
-// import { BarcodeScannerProps } from './BarcodeScanner';
-
-// Dynamically import the barcode scanner with proper typing
-const BarcodeScanner = dynamic<BarcodeScannerProps>(
-  () => import('./BarcodeScanner'),
+// Dynamically import the Scanbot scanner
+const ScanbotBarcodeScanner = dynamic(
+  () => import('./ScanbotBarcodeScanner'),
   {
     ssr: false,
-    loading: () => <div>Chargement du scanner...</div>
+    loading: () => <div>Chargement du scanner professionnel...</div>
   }
 );
 
@@ -59,7 +54,7 @@ export default function ProductScanner({ onScanSubmit, isLoading }: ProductScann
     const scanData: ScanData = {
       ...formData,
       barcode,
-      externalUserId: 'temp-user' // Replace with actual user ID from your auth system
+      externalUserId: 'temp-user'
     };
     onScanSubmit(scanData);
   };
@@ -68,7 +63,7 @@ export default function ProductScanner({ onScanSubmit, isLoading }: ProductScann
     <div className="scanner-interface">
       {scanStep === 'scan' && (
         <div>
-          <BarcodeScanner onBarcodeDetected={handleBarcodeDetected} />
+          <ScanbotBarcodeScanner onBarcodeDetected={handleBarcodeDetected} />
           <button 
             onClick={() => setScanStep('form')}
             className="mt-4 px-4 py-2 bg-gray-500 text-white rounded"

@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "node scripts/copy-scanbot-files.js && next build",
+    "dev": "node scripts/copy-scanbot-files.js && next dev",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "copy-scanbot": "node scripts/copy-scanbot-files.js"
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
@@ -15,6 +16,7 @@
     "formidable": "^3.5.4",
     "formik": "^2.4.6",
     "graphql": "^16.11.0",
+    "html5-qrcode": "^2.3.8",
     "next": "^15.5.4",
     "quagga": "^0.6.16",
     "react": "^19.0.0",
@@ -22,6 +24,7 @@
     "react-hook-form": "^7.63.0",
     "react-icons": "^5.5.0",
     "react-router": "^7.6.1",
+    "scanbot-web-sdk": "^7.2.0",
     "yup": "^1.6.1"
   },
   "devDependencies": {
